@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-primary-dark: #130a38; /* Extra deep bento navy-purple */
+  --color-primary-medium: #2d1b69; /* core Bento purple */
+  --color-primary-brand: #4a2cb5; /* Vibrant bento purple */
+  --color-primary-accent: #facc15; /* Energetic Bento Gold */
+  --color-primary-light: #f8f7ff; /* Clean bento background slate */
+  --color-card-bg: #ffffff;
+}
+
+/* Base resets & custom scrollbar */
+body {
+  background-color: #f8f7ff;
+  color: #130a38;
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2d9f3;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c3b4e7;
+}
+
