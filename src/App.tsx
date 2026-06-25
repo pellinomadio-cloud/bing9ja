@@ -7,6 +7,7 @@ import {
 
 import { User, Transaction, BingService, ActiveBing, TierLevel } from './types';
 import { TIERS, formatNaira, generateId, generateReference, getCompanyDetails } from './data';
+import { getCollectionData, setDocumentData } from './firebase';
 import AuthScreen from './components/AuthScreen';
 import DashboardHome from './components/DashboardHome';
 import BingShop from './components/BingShop';
@@ -49,6 +50,141 @@ export default function App() {
   const [selectedBingService, setSelectedBingService] = useState<any>(null);
 
   const company = getCompanyDetails();
+
+  // --- FIRESTORE INTEGRATION SYNC ENGINE ---
+  // 1. Initial Boot & Periodic Sync: pull all records from Firestore to cache in local storage
+  useEffect(() => {
+    let active = true;
+    async function loadFromFirestore() {
+      try {
+        // Load Registered Users
+        const fUsers = await getCollectionData<any>('users');
+        if (fUsers && fUsers.length > 0 && active) {
+          localStorage.setItem('bing9ja_registered_users', JSON.stringify(fUsers));
+          
+          // If we have an active user, update their local record with the one in Firestore
+          if (user) {
+            const latestUser = fUsers.find((u: any) => u.username.toLowerCase() === user.username.toLowerCase());
+            if (latestUser) {
+              const activeBingsChanged = JSON.stringify(latestUser.activeBings) !== JSON.stringify(user.activeBings);
+              if (latestUser.tier !== user.tier || latestUser.balance !== user.balance || activeBingsChanged) {
+                setUser({
+                  ...user,
+                  tier: latestUser.tier,
+                  balance: latestUser.balance,
+                  activeBings: latestUser.activeBings || []
+                });
+              }
+            }
+          }
+        }
+
+        // Load Transactions
+        const fTxs = await getCollectionData<Transaction>('transactions');
+        if (fTxs && fTxs.length > 0 && active) {
+          if (user) {
+            const userTxs = fTxs.filter((t: any) => t.username?.toLowerCase() === user.username.toLowerCase());
+            if (userTxs.length > 0) {
+              setTransactions(userTxs);
+            }
+          }
+        }
+
+        // Load Upgrade Requests
+        const fUpgrades = await getCollectionData<any>('upgrade_requests');
+        if (fUpgrades && fUpgrades.length > 0 && active) {
+          localStorage.setItem('bing9ja_upgrade_requests', JSON.stringify(fUpgrades));
+        }
+
+        // Load Node Purchases
+        const fPurchases = await getCollectionData<any>('bing_purchase_requests');
+        if (fPurchases && fPurchases.length > 0 && active) {
+          localStorage.setItem('bing9ja_bing_purchase_requests', JSON.stringify(fPurchases));
+        }
+
+        // Load System Company Settings
+        const fSettings = await getCollectionData<any>('system');
+        const companyDetailsSetting = fSettings.find((s: any) => s.id === 'company_details');
+        if (companyDetailsSetting && active) {
+          localStorage.setItem('bing9ja_company_details', JSON.stringify(companyDetailsSetting));
+        }
+      } catch (err) {
+        console.error('Error in loadFromFirestore:', err);
+      }
+    }
+
+    loadFromFirestore();
+
+    // Pull database updates every 7 seconds to keep multiple sessions synchronized
+    const interval = setInterval(loadFromFirestore, 7000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [user?.username]);
+
+  // 2. Outbound Sync: push local state mutations up to Firestore
+  // Sync user state to Firestore whenever current user or registered users list changes
+  useEffect(() => {
+    if (!user) return;
+    
+    // Find matching record from registered users list to get the password
+    const savedUsers = localStorage.getItem('bing9ja_registered_users');
+    let password = 'password123';
+    if (savedUsers) {
+      try {
+        const parsed = JSON.parse(savedUsers);
+        const matched = parsed.find((u: any) => u.username.toLowerCase() === user.username.toLowerCase());
+        if (matched && matched.password) {
+          password = matched.password;
+        }
+      } catch (e) {}
+    }
+
+    setDocumentData('users', user.username.toLowerCase(), {
+      ...user,
+      password
+    });
+  }, [user]);
+
+  // Sync transactions list to Firestore
+  useEffect(() => {
+    if (transactions.length > 0) {
+      transactions.forEach((tx) => {
+        setDocumentData('transactions', tx.id, {
+          ...tx,
+          username: user?.username || 'system'
+        });
+      });
+    }
+  }, [transactions, user?.username]);
+
+  // Sync upgrade requests and node purchase requests whenever there is a creation/approval action
+  useEffect(() => {
+    const handleSyncRequests = () => {
+      try {
+        const upgradesRaw = localStorage.getItem('bing9ja_upgrade_requests');
+        if (upgradesRaw) {
+          const reqs = JSON.parse(upgradesRaw);
+          reqs.forEach((r: any) => {
+            setDocumentData('upgrade_requests', r.id, r);
+          });
+        }
+
+        const bingsRaw = localStorage.getItem('bing9ja_bing_purchase_requests');
+        if (bingsRaw) {
+          const reqs = JSON.parse(bingsRaw);
+          reqs.forEach((r: any) => {
+            setDocumentData('bing_purchase_requests', r.id, r);
+          });
+        }
+      } catch (e) {
+        console.error('Error syncing requests to Firestore:', e);
+      }
+    };
+
+    handleSyncRequests();
+  }, [activeTab]);
 
   // Merge pending activations (upgrade & purchase requests) into user transaction history
   const displayedTransactions = useMemo(() => {

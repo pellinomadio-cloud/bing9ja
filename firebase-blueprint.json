@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account profile and state including active server nodes",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "password": { "type": "string" },
+        "referralCodeUsed": { "type": "string" },
+        "ownReferralCode": { "type": "string" },
+        "tier": { "type": "integer" },
+        "balance": { "type": "number" },
+        "referralCount": { "type": "integer" },
+        "referralBonusEarned": { "type": "number" },
+        "activeBings": { "type": "array" }
+      },
+      "required": ["username", "email", "password", "ownReferralCode", "tier", "balance", "referralCount", "referralBonusEarned", "activeBings"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial deposit, withdrawal, earnings, or upgrade transaction history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "status": { "type": "string" },
+        "reference": { "type": "string" }
+      },
+      "required": ["id", "username", "type", "amount", "description", "timestamp", "status", "reference"]
+    },
+    "UpgradeRequest": {
+      "title": "UpgradeRequest",
+      "description": "User requested account tier upgrade transaction awaiting verification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "targetTier": { "type": "integer" },
+        "cost": { "type": "number" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "reference": { "type": "string" },
+        "proofImage": { "type": "string" }
+      },
+      "required": ["id", "username", "targetTier", "cost", "status", "timestamp", "reference"]
+    },
+    "BingPurchaseRequest": {
+      "title": "BingPurchaseRequest",
+      "description": "User node purchase request awaiting administrative activation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceTitle": { "type": "string" },
+        "price": { "type": "number" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "reference": { "type": "string" },
+        "proofImage": { "type": "string" }
+      },
+      "required": ["id", "username", "serviceId", "serviceTitle", "price", "status", "timestamp", "reference"]
+    },
+    "CompanyDetails": {
+      "title": "CompanyDetails",
+      "description": "System bank details and support channels managed by administration",
+      "type": "object",
+      "properties": {
+        "bankName": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "accountName": { "type": "string" },
+        "telegramChannel": { "type": "string" }
+      },
+      "required": ["bankName", "accountNumber", "accountName", "telegramChannel"]
+    }
+  },
+  "firestore": {
+    "/users/{username}": {
+      "schema": "User",
+      "description": "Collection of user accounts indexed by username"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Log of financial receipts and activities"
+    },
+    "/upgrade_requests/{requestId}": {
+      "schema": "UpgradeRequest",
+      "description": "User manual upgrade request slips"
+    },
+    "/bing_purchase_requests/{requestId}": {
+      "schema": "BingPurchaseRequest",
+      "description": "User cloud node node purchase slips"
+    },
+    "/system/{settingId}": {
+      "schema": "CompanyDetails",
+      "description": "System level gateway parameters"
+    }
+  }
+}
