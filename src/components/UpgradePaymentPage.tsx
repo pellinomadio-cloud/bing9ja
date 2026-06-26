@@ -22,13 +22,17 @@ interface UpgradePaymentPageProps {
   selectedTier: TierInfo;
   onBack: () => void;
   addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+  upgradeRequests: any[];
+  onUpgradeSubmitted: (newRequest: UpgradeRequest) => void;
 }
 
 export default function UpgradePaymentPage({ 
   user, 
   selectedTier, 
   onBack,
-  addToast
+  addToast,
+  upgradeRequests,
+  onUpgradeSubmitted
 }: UpgradePaymentPageProps) {
   const company = getCompanyDetails();
   const [fileBase64, setFileBase64] = useState<string>('');
@@ -42,25 +46,21 @@ export default function UpgradePaymentPage({
 
   // Check for any existing request of this user
   useEffect(() => {
-    const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
-    if (saved) {
-      try {
-        const requests: UpgradeRequest[] = JSON.parse(saved);
-        const userReq = requests.find(r => r.username.toLowerCase() === user.username.toLowerCase() && r.status === 'pending');
-        if (userReq) {
-          setPendingRequest(userReq);
-        } else {
-          // Find if there's any declined request for this target level
-          const userDec = requests.find(r => r.username.toLowerCase() === user.username.toLowerCase() && r.status === 'declined' && r.targetTier === selectedTier.level);
-          if (userDec) {
-            setDeclinedRequest(userDec);
-          }
-        }
-      } catch (e) {
-        console.error(e);
+    const userReq = upgradeRequests.find(r => r.username.toLowerCase() === user.username.toLowerCase() && r.status === 'pending');
+    if (userReq) {
+      setPendingRequest(userReq);
+      setDeclinedRequest(null);
+    } else {
+      setPendingRequest(null);
+      // Find if there's any declined request for this target level
+      const userDec = upgradeRequests.find(r => r.username.toLowerCase() === user.username.toLowerCase() && r.status === 'declined' && r.targetTier === selectedTier.level);
+      if (userDec) {
+        setDeclinedRequest(userDec);
+      } else {
+        setDeclinedRequest(null);
       }
     }
-  }, [user.username, selectedTier.level]);
+  }, [user.username, selectedTier.level, upgradeRequests]);
 
   const handleCopy = (text: string, type: 'acc' | 'name') => {
     navigator.clipboard.writeText(text);
@@ -159,6 +159,10 @@ export default function UpgradePaymentPage({
       setDocumentData('upgrade_requests', newRequest.id, newRequest).catch(err => {
         console.error('Error saving upgrade request directly:', err);
       });
+
+      if (onUpgradeSubmitted) {
+        onUpgradeSubmitted(newRequest);
+      }
 
       setPendingRequest(newRequest);
       setDeclinedRequest(null); // Clear active decline warning upon re-submission
@@ -362,9 +366,9 @@ export default function UpgradePaymentPage({
             accept="image/*"
             id="payment-proof-input"
             onChange={handleFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
           />
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 pointer-events-none">
             <div className="w-12 h-12 bg-purple-50 text-primary-brand rounded-full flex items-center justify-center mx-auto shadow-inner">
               <Upload size={22} />
             </div>

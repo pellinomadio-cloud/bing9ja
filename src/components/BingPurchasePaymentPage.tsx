@@ -22,13 +22,17 @@ interface BingPurchasePaymentPageProps {
   selectedService: BingService;
   onBack: () => void;
   addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+  purchaseRequests: any[];
+  onPurchaseSubmitted: (newRequest: BingPurchaseRequest) => void;
 }
 
 export default function BingPurchasePaymentPage({
   user,
   selectedService,
   onBack,
-  addToast
+  addToast,
+  purchaseRequests,
+  onPurchaseSubmitted
 }: BingPurchasePaymentPageProps) {
   const company = getCompanyDetails();
   const [fileBase64, setFileBase64] = useState<string>('');
@@ -41,23 +45,17 @@ export default function BingPurchasePaymentPage({
 
   // Check for existing pending request for this specific service
   useEffect(() => {
-    const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
-    if (saved) {
-      try {
-        const requests: BingPurchaseRequest[] = JSON.parse(saved);
-        const userReq = requests.find(r => 
-          r.username.toLowerCase() === user.username.toLowerCase() && 
-          r.serviceId === selectedService.id && 
-          r.status === 'pending'
-        );
-        if (userReq) {
-          setPendingRequest(userReq);
-        }
-      } catch (e) {
-        console.error(e);
-      }
+    const userReq = purchaseRequests.find(r => 
+      r.username.toLowerCase() === user.username.toLowerCase() && 
+      r.serviceId === selectedService.id && 
+      r.status === 'pending'
+    );
+    if (userReq) {
+      setPendingRequest(userReq);
+    } else {
+      setPendingRequest(null);
     }
-  }, [user.username, selectedService.id]);
+  }, [user.username, selectedService.id, purchaseRequests]);
 
   const handleCopy = (text: string, type: 'acc' | 'name') => {
     navigator.clipboard.writeText(text);
@@ -156,6 +154,10 @@ export default function BingPurchasePaymentPage({
       setDocumentData('bing_purchase_requests', newRequest.id, newRequest).catch(err => {
         console.error('Error saving purchase request directly:', err);
       });
+
+      if (onPurchaseSubmitted) {
+        onPurchaseSubmitted(newRequest);
+      }
 
       setPendingRequest(newRequest);
       setSubmitting(false);
@@ -344,9 +346,9 @@ export default function BingPurchasePaymentPage({
             accept="image/*"
             id="bing-proof-input"
             onChange={handleFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
           />
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 pointer-events-none">
             <div className="w-12 h-12 bg-purple-50 text-primary-brand rounded-full flex items-center justify-center mx-auto shadow-inner">
               <Upload size={22} />
             </div>

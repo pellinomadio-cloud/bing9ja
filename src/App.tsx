@@ -49,6 +49,24 @@ export default function App() {
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<any>(null);
   const [selectedBingService, setSelectedBingService] = useState<any>(null);
 
+  const [upgradeRequests, setUpgradeRequests] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [purchaseRequests, setPurchaseRequests] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const company = getCompanyDetails();
 
   // --- FIRESTORE INTEGRATION SYNC ENGINE ---
@@ -127,6 +145,7 @@ export default function App() {
             } catch (e) {}
           }
           localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(merged));
+          setUpgradeRequests(merged);
         }
 
         // Load Node Purchases
@@ -145,6 +164,7 @@ export default function App() {
             } catch (e) {}
           }
           localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(merged));
+          setPurchaseRequests(merged);
         }
 
         // Load System Company Settings
@@ -263,61 +283,45 @@ export default function App() {
     if (!user) return list;
 
     // Fetch pending upgrades
-    try {
-      const upgradeSaved = localStorage.getItem('goldrush9ja_upgrade_requests');
-      if (upgradeSaved) {
-        const reqs = JSON.parse(upgradeSaved);
-        const userPendingUpgrade = reqs.filter((r: any) => 
-          r.username.toLowerCase() === user.username.toLowerCase() && 
-          r.status === 'pending'
-        );
-        userPendingUpgrade.forEach((req: any) => {
-          if (!list.some(t => t.id === req.id || t.reference === req.reference)) {
-            list.unshift({
-              id: req.id,
-              type: 'upgrade',
-              amount: req.cost,
-              description: `Upgrade Level ${req.targetTier} (Processing)`,
-              timestamp: req.timestamp,
-              status: 'pending',
-              reference: req.reference
-            });
-          }
+    const userPendingUpgrade = upgradeRequests.filter((r: any) => 
+      r.username.toLowerCase() === user.username.toLowerCase() && 
+      r.status === 'pending'
+    );
+    userPendingUpgrade.forEach((req: any) => {
+      if (!list.some(t => t.id === req.id || t.reference === req.reference)) {
+        list.unshift({
+          id: req.id,
+          type: 'upgrade',
+          amount: req.cost,
+          description: `Upgrade Level ${req.targetTier} (Processing)`,
+          timestamp: req.timestamp,
+          status: 'pending',
+          reference: req.reference
         });
       }
-    } catch (e) {
-      console.error(e);
-    }
+    });
 
     // Fetch pending purchase requests
-    try {
-      const bingsSaved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
-      if (bingsSaved) {
-        const reqs = JSON.parse(bingsSaved);
-        const userPendingBings = reqs.filter((r: any) => 
-          r.username.toLowerCase() === user.username.toLowerCase() && 
-          r.status === 'pending'
-        );
-        userPendingBings.forEach((req: any) => {
-          if (!list.some(t => t.id === req.id || t.reference === req.reference)) {
-            list.unshift({
-              id: req.id,
-              type: 'purchase',
-              amount: req.price,
-              description: `Deploy Node: ${req.serviceTitle} (Processing)`,
-              timestamp: req.timestamp,
-              status: 'pending',
-              reference: req.reference
-            });
-          }
+    const userPendingBings = purchaseRequests.filter((r: any) => 
+      r.username.toLowerCase() === user.username.toLowerCase() && 
+      r.status === 'pending'
+    );
+    userPendingBings.forEach((req: any) => {
+      if (!list.some(t => t.id === req.id || t.reference === req.reference)) {
+        list.unshift({
+          id: req.id,
+          type: 'purchase',
+          amount: req.price,
+          description: `Deploy Node: ${req.serviceTitle} (Processing)`,
+          timestamp: req.timestamp,
+          status: 'pending',
+          reference: req.reference
         });
       }
-    } catch (e) {
-      console.error(e);
-    }
+    });
 
     return list;
-  }, [transactions, user]);
+  }, [transactions, user, upgradeRequests, purchaseRequests]);
 
   // Sync user state to local storage
   useEffect(() => {
@@ -1123,6 +1127,8 @@ export default function App() {
                 selectedTier={selectedUpgradeTier || TIERS.find(t => t.level === user.tier + 1) || TIERS[1]}
                 onBack={() => setActiveTab('home')}
                 addToast={addToast}
+                upgradeRequests={upgradeRequests}
+                onUpgradeSubmitted={(newReq) => setUpgradeRequests(prev => [newReq, ...prev])}
               />
             </motion.div>
           )}
@@ -1140,6 +1146,8 @@ export default function App() {
                 selectedService={selectedBingService || BING_SERVICES[0]}
                 onBack={() => setActiveTab('bingshop')}
                 addToast={addToast}
+                purchaseRequests={purchaseRequests}
+                onPurchaseSubmitted={(newReq) => setPurchaseRequests(prev => [newReq, ...prev])}
               />
             </motion.div>
           )}
