@@ -67,7 +67,16 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-import { collection, getDocs, setDoc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
+
+export async function deleteDocumentData(collectionName: string, docId: string): Promise<void> {
+  const path = `${collectionName}/${docId}`;
+  try {
+    await deleteDoc(doc(db, collectionName, docId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
 
 export async function getCollectionData<T>(collectionName: string): Promise<T[]> {
   try {

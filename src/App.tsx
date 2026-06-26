@@ -7,7 +7,7 @@ import {
 
 import { User, Transaction, BingService, ActiveBing, TierLevel } from './types';
 import { TIERS, formatNaira, generateId, generateReference, getCompanyDetails } from './data';
-import { getCollectionData, setDocumentData } from './firebase';
+import { getCollectionData, setDocumentData, deleteDocumentData } from './firebase';
 import AuthScreen from './components/AuthScreen';
 import DashboardHome from './components/DashboardHome';
 import BingShop from './components/BingShop';
@@ -116,7 +116,23 @@ export default function App() {
         // Load Corporate Admin Messages
         const fMessages = await getCollectionData<any>('messages');
         if (fMessages && active) {
-          localStorage.setItem('goldrush9ja_messages', JSON.stringify(fMessages));
+          const now = Date.now();
+          const oneDayMs = 24 * 60 * 60 * 1000;
+          const validMessages: any[] = [];
+          
+          for (const msg of fMessages) {
+            const msgTime = msg.createdAtMs || now;
+            if (now - msgTime > oneDayMs) {
+              deleteDocumentData('messages', msg.id).catch(err => console.error('Error deleting expired message:', err));
+            } else {
+              if (!msg.createdAtMs) {
+                msg.createdAtMs = now;
+                setDocumentData('messages', msg.id, { ...msg, createdAtMs: now }).catch(err => console.error('Error updating message time:', err));
+              }
+              validMessages.push(msg);
+            }
+          }
+          localStorage.setItem('goldrush9ja_messages', JSON.stringify(validMessages));
         }
       } catch (err) {
         console.error('Error in loadFromFirestore:', err);

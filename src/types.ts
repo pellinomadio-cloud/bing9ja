@@ -72,6 +72,7 @@ export interface AdminMessage {
   body: string;
   timestamp: string;
   sender: string;
+  createdAtMs?: number;
 }
 
 

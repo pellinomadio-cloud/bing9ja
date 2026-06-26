@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, ShieldAlert, UserX, UserCheck, Search, Users, 
   AlertTriangle, ShieldCheck, Check, X, FileText, Cpu, Coins,
-  MessageSquare, Send, Edit, Wallet
+  MessageSquare, Send, Edit, Wallet, Trash2
 } from 'lucide-react';
 import { User, ActiveBing, AdminMessage } from '../types';
-import { formatNaira, BING_SERVICES, getCompanyDetails, saveCompanyDetails } from '../data';
+import { formatNaira, BING_SERVICES, getCompanyDetails, saveCompanyDetails, generateId } from '../data';
 import { UpgradeRequest } from './UpgradePaymentPage';
 import { BingPurchaseRequest } from './BingPurchasePaymentPage';
-import { setDocumentData } from '../firebase';
+import { setDocumentData, deleteDocumentData } from '../firebase';
 
 interface AdminPageProps {
   onBack: () => void;
@@ -31,6 +31,11 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
   const [msgTitle, setMsgTitle] = useState('');
   const [msgBody, setMsgBody] = useState('');
   const [sentMessages, setSentMessages] = useState<AdminMessage[]>([]);
+
+  // States for Quick Message Modal (Invite Message feature)
+  const [quickMessageUser, setQuickMessageUser] = useState<string | null>(null);
+  const [quickMessageTitle, setQuickMessageTitle] = useState('');
+  const [quickMessageBody, setQuickMessageBody] = useState('');
 
   // Company and Telegram channel details state
   const [bankName, setBankName] = useState('');
@@ -361,7 +366,8 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       title: msgTitle.trim(),
       body: msgBody.trim(),
       timestamp: new Date().toLocaleString('en-NG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }),
-      sender: 'Admin'
+      sender: 'Admin',
+      createdAtMs: Date.now()
     };
 
     // Save to Firestore messages collection
@@ -377,6 +383,62 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
     // Reset form
     setMsgTitle('');
     setMsgBody('');
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    try {
+      await deleteDocumentData('messages', msgId);
+      const updated = sentMessages.filter(m => m.id !== msgId);
+      setSentMessages(updated);
+      localStorage.setItem('goldrush9ja_messages', JSON.stringify(updated));
+      addToast('Corporate message deleted successfully.', 'success');
+    } catch (err) {
+      console.error('Error deleting message:', err);
+      addToast('Failed to delete message. Please try again.', 'error');
+    }
+  };
+
+  const openQuickMessage = (username: string, amount: number, purpose: string, reference: string) => {
+    setQuickMessageUser(username);
+    setQuickMessageTitle(`Regarding your payment: ₦${amount.toLocaleString()}`);
+    setQuickMessageBody(
+      `Hello @${username.toUpperCase()},\n\n` +
+      `We received your payment upload of ₦${amount.toLocaleString()} for ${purpose} (Ref: ${reference}).\n\n` +
+      `Please let us know if you have any questions or require further assistance.\n\n` +
+      `Best regards,\nGoldRush9ja Management`
+    );
+  };
+
+  const handleSendQuickMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickMessageUser || !quickMessageTitle.trim() || !quickMessageBody.trim()) {
+      addToast('Please fill in all message fields.', 'error');
+      return;
+    }
+
+    const newMessage: AdminMessage = {
+      id: generateId(),
+      recipient: quickMessageUser.toLowerCase(),
+      title: quickMessageTitle.trim(),
+      body: quickMessageBody.trim(),
+      timestamp: new Date().toLocaleString('en-NG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }),
+      sender: 'Admin',
+      createdAtMs: Date.now()
+    };
+
+    try {
+      await setDocumentData('messages', newMessage.id, newMessage);
+      const updatedMessages = [newMessage, ...sentMessages];
+      setSentMessages(updatedMessages);
+      localStorage.setItem('goldrush9ja_messages', JSON.stringify(updatedMessages));
+      addToast(`Message sent successfully to @${quickMessageUser.toUpperCase()}!`, 'success');
+      setQuickMessageUser(null);
+      setQuickMessageTitle('');
+      setQuickMessageBody('');
+    } catch (err) {
+      console.error('Error sending message:', err);
+      addToast('Failed to send message. Please try again.', 'error');
+    }
   };
 
   const filtered = registeredUsers.filter(u => 
@@ -575,17 +637,26 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
         {sentMessages.length > 0 && (
           <div className="pt-3 border-t border-purple-50 space-y-2.5">
             <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-purple-400">Recently Sent Corporate Communications</h5>
-            <div className="space-y-2 max-h-[160px] overflow-y-auto scrollbar-thin pr-1">
-              {sentMessages.slice(0, 3).map(m => (
-                <div key={m.id} className="bg-purple-50/20 border border-purple-100/30 p-3 rounded-xl space-y-1">
-                  <div className="flex justify-between items-center">
+            <div className="space-y-2 max-h-[220px] overflow-y-auto scrollbar-thin pr-1">
+              {sentMessages.map(m => (
+                <div key={m.id} className="bg-purple-50/20 border border-purple-100/30 p-3 rounded-xl space-y-1 relative group">
+                  <div className="flex justify-between items-center pr-8">
                     <span className="text-[8px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded uppercase">
                       To: {m.recipient === 'all' ? 'All Users' : `@${m.recipient.toUpperCase()}`}
                     </span>
                     <span className="text-[8px] font-mono text-purple-400 font-medium">{m.timestamp}</span>
                   </div>
-                  <h6 className="font-extrabold text-[11px] text-primary-dark">{m.title}</h6>
-                  <p className="text-[10px] text-purple-950/70 truncate">{m.body}</p>
+                  <h6 className="font-extrabold text-[11px] text-primary-dark pr-8">{m.title}</h6>
+                  <p className="text-[10px] text-purple-950/70 pr-8 whitespace-pre-wrap">{m.body}</p>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMessage(m.id)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors cursor-pointer opacity-100 sm:opacity-0 group-hover:opacity-100"
+                    title="Delete Message"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -664,6 +735,14 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
                   {/* Admin Approve/Decline actions */}
                   {req.status === 'pending' && (
                     <div className="flex gap-2 justify-end mt-1">
+                      <button
+                        type="button"
+                        onClick={() => openQuickMessage(req.username, req.cost, `Tier Upgrade to Lvl ${req.targetTier}`, req.reference)}
+                        className="mr-auto px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-100 rounded-xl font-bold text-[10px] uppercase flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <MessageSquare size={12} className="h-3 w-3 text-purple-600" />
+                        <span>Invite Message</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDeclineUpgrade(req.id)}
@@ -762,6 +841,14 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
                     <div className="flex gap-2 justify-end mt-1">
                       <button
                         type="button"
+                        onClick={() => openQuickMessage(req.username, req.price, `Bing Purchase of ${req.serviceTitle}`, req.reference)}
+                        className="mr-auto px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-100 rounded-xl font-bold text-[10px] uppercase flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <MessageSquare size={12} className="h-3 w-3 text-purple-600" />
+                        <span>Invite Message</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDeclineBingPurchase(req.id)}
                         className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl font-bold text-[10px] uppercase flex items-center gap-1 cursor-pointer transition-colors"
                       >
@@ -803,13 +890,23 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       <div className="bg-white rounded-3xl border border-primary-medium/10 p-5 shadow-sm space-y-4">
         <div className="flex justify-between items-center">
           <h4 className="font-extrabold text-xs uppercase tracking-wider text-purple-400">Registered Users Directory</h4>
-          <span className="text-[9px] font-bold text-purple-400 font-mono">Count: {filtered.length}</span>
+          <span className="text-[10px] font-extrabold text-purple-950 bg-purple-50 border border-purple-100 px-2.5 py-1 rounded-full uppercase">
+            Total Users: {registeredUsers.length}
+          </span>
         </div>
 
         <div className="space-y-3">
-          {filtered.length === 0 ? (
+          {searchTerm.trim() === '' ? (
+            <div className="text-center py-10 bg-purple-50/10 border border-dashed border-purple-100 rounded-2xl p-6 space-y-2">
+              <Users className="h-8 w-8 text-purple-300 mx-auto" />
+              <h5 className="font-bold text-xs text-primary-dark">Search to view user details</h5>
+              <p className="text-[11px] text-purple-400 font-medium max-w-sm mx-auto leading-relaxed">
+                There are <span className="font-bold text-rose-600">{registeredUsers.length} registered users</span>. To view or edit user accounts, enter a username or email in the search bar above.
+              </p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-8 text-purple-300 text-xs font-semibold">
-              No registered user matching search.
+              No registered user matching "{searchTerm}".
             </div>
           ) : (
             filtered.map(usr => {
@@ -901,6 +998,83 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
           )}
         </div>
       </div>
+
+      {/* Quick Message Modal overlay */}
+      {quickMessageUser && (
+        <div className="fixed inset-0 bg-primary-dark/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-purple-100 max-w-lg w-full p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setQuickMessageUser(null)}
+              className="absolute right-4 top-4 p-1.5 bg-purple-50 text-purple-400 hover:text-purple-600 rounded-full transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            
+            <div className="flex items-center gap-2 border-b border-purple-50 pb-3">
+              <MessageSquare className="text-rose-600 h-5 w-5" />
+              <div>
+                <h4 className="font-extrabold text-xs uppercase tracking-wider text-primary-medium">
+                  Direct Messaging System
+                </h4>
+                <p className="text-[10px] text-purple-400 font-medium">Sending private message to @{quickMessageUser.toUpperCase()}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSendQuickMessage} className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-purple-400 block">Recipient</label>
+                <input
+                  type="text"
+                  value={`@${quickMessageUser.toUpperCase()}`}
+                  className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl font-semibold text-primary-dark disabled:opacity-70"
+                  disabled
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-purple-400 block">Message Subject / Title</label>
+                <input
+                  type="text"
+                  value={quickMessageTitle}
+                  onChange={(e) => setQuickMessageTitle(e.target.value)}
+                  className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark"
+                  placeholder="Subject"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-purple-400 block">Message Body</label>
+                <textarea
+                  value={quickMessageBody}
+                  onChange={(e) => setQuickMessageBody(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark leading-relaxed"
+                  placeholder="Type message here..."
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-purple-50">
+                <button
+                  type="button"
+                  onClick={() => setQuickMessageUser(null)}
+                  className="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-xl font-bold text-[10px] uppercase cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+                >
+                  <Send size={12} />
+                  <span>Send Private Message</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
