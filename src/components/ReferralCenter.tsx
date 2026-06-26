@@ -16,7 +16,7 @@ export default function ReferralCenter({ user }: { user: User }) {
   const [copied, setCopied] = useState(false);
 
   const referralBonusAmount = 16890;
-  const referralLink = `${window.location.origin}/ref?code=${user.ownReferralCode}`;
+  const referralLink = `https://goldrush9ja.online/?code=${user.ownReferralCode}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);

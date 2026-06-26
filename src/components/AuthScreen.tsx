@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Mail, User as UserIcon, Lock, Sparkles, Smartphone, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
 import { TIERS } from '../data';
-import { setDocumentData } from '../firebase';
+import { setDocumentData, getCollectionData } from '../firebase';
 
 interface AuthScreenProps {
   onAuthSuccess: (user: User) => void;
@@ -22,13 +22,13 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      let code = params.get('code');
+      let code = params.get('code') || params.get('ref');
 
       // Fallback check in case it's in format: /ref?code=XYZ or direct URL matching
       if (!code) {
-        const urlMatch = window.location.href.match(/[?&]code=([^&#]+)/);
+        const urlMatch = window.location.href.match(/[?&](code|ref)=([^&#]+)/);
         if (urlMatch) {
-          code = urlMatch[1];
+          code = urlMatch[2];
         }
       }
 
@@ -41,7 +41,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -61,19 +61,23 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
     setLoading(true);
 
-    // Simulate network delay
-    setTimeout(() => {
-      setLoading(false);
-      
-      // Load registered users from localStorage
-      const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
+    try {
+      // Load registered users directly from Firestore for real-time validation
       let registeredUsers: any[] = [];
       try {
+        const liveUsers = await getCollectionData<any>('users');
+        if (liveUsers && liveUsers.length > 0) {
+          registeredUsers = liveUsers;
+          localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(liveUsers));
+        } else {
+          throw new Error('No live users returned');
+        }
+      } catch (dbErr) {
+        console.warn('Could not fetch live users from database, falling back to cache:', dbErr);
+        const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
         if (usersRaw) {
           registeredUsers = JSON.parse(usersRaw);
         }
-      } catch (err) {
-        registeredUsers = [];
       }
 
       if (isRegister) {
@@ -141,8 +145,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             };
 
             // Write updates to Firestore
-            setDocumentData('users', referrer.username.toLowerCase(), referrer).catch(err => console.error('Error syncing referrer:', err));
-            setDocumentData('transactions', referralTx.id, referralTx).catch(err => console.error('Error syncing referral transaction:', err));
+            await setDocumentData('users', referrer.username.toLowerCase(), referrer);
+            await setDocumentData('transactions', referralTx.id, referralTx);
           }
         }
 
@@ -151,6 +155,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         registeredUsers.push(userToSave);
         localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registeredUsers));
         
+        // Save the new user directly to Firestore instantly
+        await setDocumentData('users', newUser.username.toLowerCase(), userToSave);
+
         // Also set this user as the currently active one
         localStorage.setItem('goldrush9ja_current_user', JSON.stringify(newUser));
 
@@ -163,6 +170,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
         if (!matchingUser) {
           setError('Invalid email or password. Please make sure you have registered.');
+          setLoading(false);
           return;
         }
 
@@ -171,7 +179,12 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         localStorage.setItem('goldrush9ja_current_user', JSON.stringify(cleanedUser));
         onAuthSuccess(cleanedUser as User);
       }
-    }, 1200);
+    } catch (err: any) {
+      console.error('Error during authentication submit:', err);
+      setError(err?.message || 'Authentication failed. Please check your network and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -17,7 +17,7 @@ export const TIERS: TierInfo[] = [
     level: 2,
     name: "Tier 2 (Gold Plus)",
     limit: 500000,
-    cost: 5000,
+    cost: 7600,
     perks: [
       "Maximum Balance Limit: ₦500,000",
       "Express Withdrawal Processing (4h)",

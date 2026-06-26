@@ -67,11 +67,21 @@ export default function App() {
             const latestUser = fUsers.find((u: any) => u.username.toLowerCase() === user.username.toLowerCase());
             if (latestUser) {
               const activeBingsChanged = JSON.stringify(latestUser.activeBings) !== JSON.stringify(user.activeBings);
-              if (latestUser.tier !== user.tier || latestUser.balance !== user.balance || activeBingsChanged) {
+              const referralCountChanged = (latestUser.referralCount || 0) !== (user.referralCount || 0);
+              const referralBonusChanged = (latestUser.referralBonusEarned || 0) !== (user.referralBonusEarned || 0);
+              if (
+                latestUser.tier !== user.tier || 
+                latestUser.balance !== user.balance || 
+                referralCountChanged ||
+                referralBonusChanged ||
+                activeBingsChanged
+              ) {
                 setUser({
                   ...user,
                   tier: latestUser.tier,
                   balance: latestUser.balance,
+                  referralCount: latestUser.referralCount || 0,
+                  referralBonusEarned: latestUser.referralBonusEarned || 0,
                   activeBings: latestUser.activeBings || []
                 });
               }
@@ -356,11 +366,21 @@ export default function App() {
         if (latestRecord) {
           // Sync tier level, balance, activeBings, and other core attributes
           const activeBingsChanged = JSON.stringify(latestRecord.activeBings) !== JSON.stringify(user.activeBings);
-          if (latestRecord.tier !== user.tier || latestRecord.balance !== user.balance || activeBingsChanged) {
+          const referralCountChanged = (latestRecord.referralCount || 0) !== (user.referralCount || 0);
+          const referralBonusChanged = (latestRecord.referralBonusEarned || 0) !== (user.referralBonusEarned || 0);
+          if (
+            latestRecord.tier !== user.tier || 
+            latestRecord.balance !== user.balance || 
+            referralCountChanged ||
+            referralBonusChanged ||
+            activeBingsChanged
+          ) {
             setUser(prev => prev ? {
               ...prev,
               tier: latestRecord.tier,
               balance: latestRecord.balance,
+              referralCount: latestRecord.referralCount || 0,
+              referralBonusEarned: latestRecord.referralBonusEarned || 0,
               activeBings: latestRecord.activeBings || []
             } : null);
           }
