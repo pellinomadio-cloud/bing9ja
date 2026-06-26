@@ -9,7 +9,7 @@ export const TIERS: TierInfo[] = [
     perks: [
       "Maximum Balance Limit: ₦100,000",
       "Standard Withdrawal Processing (24h)",
-      "Access to basic Bing Cloud & Vault plans",
+      "Access to basic GoldRush Cloud & Vault plans",
       "Standard referral benefits"
     ]
   },
@@ -21,7 +21,7 @@ export const TIERS: TierInfo[] = [
     perks: [
       "Maximum Balance Limit: ₦500,000",
       "Express Withdrawal Processing (4h)",
-      "Access to Node & Server Bing plans",
+      "Access to Node & Server GoldRush plans",
       "1.5x speed on daily claims",
       "Priority customer help desk"
     ]
@@ -47,7 +47,7 @@ export const TIERS: TierInfo[] = [
     perks: [
       "Maximum Balance Limit: ₦10,000,000",
       "Immediate VIP direct channel payouts",
-      "Access to all Premium & Executive Bings",
+      "Access to all Premium & Executive GoldRush Nodes",
       "Dedicated 24/7 Account Success Manager",
       "Custom branded virtual card option"
     ]
@@ -57,8 +57,8 @@ export const TIERS: TierInfo[] = [
 export const BING_SERVICES: BingService[] = [
   {
     id: "bing-1",
-    title: "Bing Cloud Starter",
-    description: "Enter the Bing system with a lightweight virtual machine. Ideal for beginners.",
+    title: "GoldRush Cloud Starter",
+    description: "Enter the GoldRush system with a lightweight virtual machine. Ideal for beginners.",
     price: 3000,
     totalIncome: 4500,
     dailyIncome: 300,
@@ -69,7 +69,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-2",
-    title: "Bing Naira Fast Boost",
+    title: "GoldRush Naira Fast Boost",
     description: "High-velocity server nodes processing micro-transactions at lightspeed.",
     price: 5000,
     totalIncome: 7800,
@@ -81,7 +81,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-3",
-    title: "Bing Smart Shield",
+    title: "GoldRush Smart Shield",
     description: "Secure, automated smart contract parser earning continuous network gas fees.",
     price: 8000,
     totalIncome: 12800,
@@ -93,7 +93,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-4",
-    title: "Bing Lagos Grid Node",
+    title: "GoldRush Lagos Grid Node",
     description: "Local data cluster positioned in Ikeja processing localized logistics routing.",
     price: 12000,
     totalIncome: 20400,
@@ -105,7 +105,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-5",
-    title: "Bing Gbagada Server",
+    title: "GoldRush Gbagada Server",
     description: "Multi-threaded dedicated rig processing payment payloads across West Africa.",
     price: 20000,
     totalIncome: 35000,
@@ -117,7 +117,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-6",
-    title: "Bing Safebox Vault",
+    title: "GoldRush Safebox Vault",
     description: "Liquidity locker contributing to local currency exchange hedging pools.",
     price: 30000,
     totalIncome: 54000,
@@ -129,7 +129,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-7",
-    title: "Bing Abuja Hub Node",
+    title: "GoldRush Abuja Hub Node",
     description: "Capital-grade digital processing server supporting public network audits.",
     price: 45000,
     totalIncome: 85500,
@@ -141,7 +141,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-8",
-    title: "Bing West Africa Cloud",
+    title: "GoldRush West Africa Cloud",
     description: "Continental-tier CDN server caching high-traffic local video feeds.",
     price: 60000,
     totalIncome: 117000,
@@ -153,7 +153,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-9",
-    title: "Bing Quantum Arbitrage",
+    title: "GoldRush Quantum Arbitrage",
     description: "Advanced price-difference execution logic yielding returns across 8 global hubs.",
     price: 80000,
     totalIncome: 160000,
@@ -165,7 +165,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-10",
-    title: "Bing Ikeja Power Grid",
+    title: "GoldRush Ikeja Power Grid",
     description: "Industrial hardware power unit powering secondary fintech computations.",
     price: 100000,
     totalIncome: 210000,
@@ -177,7 +177,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-11",
-    title: "Bing Lekki VIP Server",
+    title: "GoldRush Lekki VIP Server",
     description: "Prestige server stack for exclusive, hyper-secured high-throughput ledgers.",
     price: 150000,
     totalIncome: 330000,
@@ -189,7 +189,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-12",
-    title: "Bing Whale Arbitrage",
+    title: "GoldRush Whale Arbitrage",
     description: "Deep pool algorithmic buyer extracting margins from bulk commodity purchases.",
     price: 250000,
     totalIncome: 575000,
@@ -201,7 +201,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-13",
-    title: "Bing Emerald Oracle",
+    title: "GoldRush Emerald Oracle",
     description: "Precision blockchain oracle processing vital price feeds with high security bonds.",
     price: 400000,
     totalIncome: 960000,
@@ -213,7 +213,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-14",
-    title: "Bing Imperial Mainframe",
+    title: "GoldRush Imperial Mainframe",
     description: "The crown jewel of enterprise hardware. Maximum network throughput configuration.",
     price: 600000,
     totalIncome: 1500000,
@@ -225,7 +225,7 @@ export const BING_SERVICES: BingService[] = [
   },
   {
     id: "bing-15",
-    title: "Bing Apex Ultimate Cloud",
+    title: "GoldRush Apex Ultimate Cloud",
     description: "Uncapped processing array running quantum-level operations with ultimate returns.",
     price: 1000000,
     totalIncome: 2600000,
@@ -248,7 +248,7 @@ export const generateId = () => Math.random().toString(36).substr(2, 9);
 export const generateReference = () => "TX-" + Math.floor(Math.random() * 100000000).toString();
 
 export const getCompanyDetails = (): CompanyDetails => {
-  const saved = localStorage.getItem('bing9ja_company_details');
+  const saved = localStorage.getItem('goldrush9ja_company_details');
   if (saved) {
     try {
       return JSON.parse(saved);
@@ -259,12 +259,11 @@ export const getCompanyDetails = (): CompanyDetails => {
   return {
     bankName: "Wema Bank / ALAT",
     accountNumber: "0124982345",
-    accountName: "BING9JA FINANCIAL HUB CO.",
-    telegramChannel: "@bing9ja"
+    accountName: "GOLDRUSH9JA FINANCIAL HUB CO.",
+    telegramChannel: "@goldrush9ja"
   };
 };
 
 export const saveCompanyDetails = (details: CompanyDetails) => {
-  localStorage.setItem('bing9ja_company_details', JSON.stringify(details));
+  localStorage.setItem('goldrush9ja_company_details', JSON.stringify(details));
 };
-

@@ -7,6 +7,7 @@ import { User, ActiveBing } from '../types';
 import { formatNaira, BING_SERVICES, getCompanyDetails, saveCompanyDetails } from '../data';
 import { UpgradeRequest } from './UpgradePaymentPage';
 import { BingPurchaseRequest } from './BingPurchasePaymentPage';
+import { setDocumentData } from '../firebase';
 
 interface AdminPageProps {
   onBack: () => void;
@@ -28,19 +29,19 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
 
   // Fetch from localStorage
   useEffect(() => {
-    const savedReg = localStorage.getItem('bing9ja_registered_users');
+    const savedReg = localStorage.getItem('goldrush9ja_registered_users');
     if (savedReg) {
       setRegisteredUsers(JSON.parse(savedReg));
     }
-    const savedBanned = localStorage.getItem('bing9ja_banned_users');
+    const savedBanned = localStorage.getItem('goldrush9ja_banned_users');
     if (savedBanned) {
       setBannedUsers(JSON.parse(savedBanned));
     }
-    const savedReqs = localStorage.getItem('bing9ja_upgrade_requests');
+    const savedReqs = localStorage.getItem('goldrush9ja_upgrade_requests');
     if (savedReqs) {
       setUpgradeRequests(JSON.parse(savedReqs));
     }
-    const savedBingPurchases = localStorage.getItem('bing9ja_bing_purchase_requests');
+    const savedBingPurchases = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (savedBingPurchases) {
       setBingPurchaseRequests(JSON.parse(savedBingPurchases));
     }
@@ -55,11 +56,16 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
 
   const handleSaveCompanyDetails = (e: React.FormEvent) => {
     e.preventDefault();
-    saveCompanyDetails({
+    const details = {
       bankName,
       accountNumber,
       accountName,
       telegramChannel
+    };
+    saveCompanyDetails(details);
+    setDocumentData('system', 'company_details', {
+      id: 'company_details',
+      ...details
     });
     addToast('Company credentials & Telegram channel details updated successfully!', 'success');
   };
@@ -77,11 +83,15 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
     }
 
     setBannedUsers(updatedBanned);
-    localStorage.setItem('bing9ja_banned_users', JSON.stringify(updatedBanned));
+    localStorage.setItem('goldrush9ja_banned_users', JSON.stringify(updatedBanned));
+    setDocumentData('system', 'banned_users', {
+      id: 'banned_users',
+      usernames: updatedBanned
+    });
   };
 
   const handleApproveUpgrade = (reqId: string) => {
-    const saved = localStorage.getItem('bing9ja_upgrade_requests');
+    const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
     if (!saved) return;
     try {
       const reqs: UpgradeRequest[] = JSON.parse(saved);
@@ -92,21 +102,23 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       req.status = 'approved';
 
       // Update in localStorage upgrade requests
-      localStorage.setItem('bing9ja_upgrade_requests', JSON.stringify(reqs));
+      localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(reqs));
       setUpgradeRequests(reqs);
+      setDocumentData('upgrade_requests', req.id, req);
 
       // Upgrade the actual user's tier in the master database list
-      const usersRaw = localStorage.getItem('bing9ja_registered_users');
+      const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
       if (usersRaw) {
         const registered = JSON.parse(usersRaw);
         const uIdx = registered.findIndex((u: any) => u.username.toLowerCase() === req.username.toLowerCase());
         if (uIdx !== -1) {
           registered[uIdx].tier = req.targetTier;
-          localStorage.setItem('bing9ja_registered_users', JSON.stringify(registered));
+          localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registered));
           setRegisteredUsers(registered);
+          setDocumentData('users', registered[uIdx].username.toLowerCase(), registered[uIdx]);
 
           // Append a positive upgrade transaction log to the transaction logs so the ledger balances out
-          const savedTx = localStorage.getItem('bing9ja_transactions');
+          const savedTx = localStorage.getItem('goldrush9ja_transactions');
           let txs: any[] = [];
           if (savedTx) {
             txs = JSON.parse(savedTx);
@@ -118,10 +130,12 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
             description: `Upgraded to Level ${req.targetTier} (Approved)`,
             timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
             status: 'completed',
-            reference: req.reference
+            reference: req.reference,
+            username: req.username.toLowerCase()
           };
           txs = [upgradeTx, ...txs];
-          localStorage.setItem('bing9ja_transactions', JSON.stringify(txs));
+          localStorage.setItem('goldrush9ja_transactions', JSON.stringify(txs));
+          setDocumentData('transactions', upgradeTx.id, upgradeTx);
         }
       }
 
@@ -132,7 +146,7 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
   };
 
   const handleDeclineUpgrade = (reqId: string) => {
-    const saved = localStorage.getItem('bing9ja_upgrade_requests');
+    const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
     if (!saved) return;
     try {
       const reqs: UpgradeRequest[] = JSON.parse(saved);
@@ -142,11 +156,12 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       const req = reqs[reqIdx];
       req.status = 'declined';
 
-      localStorage.setItem('bing9ja_upgrade_requests', JSON.stringify(reqs));
+      localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(reqs));
       setUpgradeRequests(reqs);
+      setDocumentData('upgrade_requests', req.id, req);
 
       // Append a failed/declined transaction to the user's transaction history so it is logged
-      const savedTx = localStorage.getItem('bing9ja_transactions');
+      const savedTx = localStorage.getItem('goldrush9ja_transactions');
       let txs: any[] = [];
       if (savedTx) {
         txs = JSON.parse(savedTx);
@@ -158,10 +173,12 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
         description: `Upgrade to Level ${req.targetTier} (Declined: Please upload right payment)`,
         timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
         status: 'failed',
-        reference: req.reference
+        reference: req.reference,
+        username: req.username.toLowerCase()
       };
       txs = [declineTx, ...txs];
-      localStorage.setItem('bing9ja_transactions', JSON.stringify(txs));
+      localStorage.setItem('goldrush9ja_transactions', JSON.stringify(txs));
+      setDocumentData('transactions', declineTx.id, declineTx);
 
       addToast(`Upgrade request declined for ${req.username}.`, 'error');
     } catch (e) {
@@ -170,7 +187,7 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
   };
 
   const handleApproveBingPurchase = (reqId: string) => {
-    const saved = localStorage.getItem('bing9ja_bing_purchase_requests');
+    const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (!saved) return;
     try {
       const reqs: BingPurchaseRequest[] = JSON.parse(saved);
@@ -181,18 +198,19 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       req.status = 'approved';
 
       // Update local storage requests
-      localStorage.setItem('bing9ja_bing_purchase_requests', JSON.stringify(reqs));
+      localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(reqs));
       setBingPurchaseRequests(reqs);
+      setDocumentData('bing_purchase_requests', req.id, req);
 
       // Find the corresponding service
       const service = BING_SERVICES.find(s => s.id === req.serviceId);
       if (!service) {
-        addToast(`Error: Bing service not found!`, 'error');
+        addToast(`Error: GoldRush service not found!`, 'error');
         return;
       }
 
       // Add the active contract to the actual user's account
-      const usersRaw = localStorage.getItem('bing9ja_registered_users');
+      const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
       if (usersRaw) {
         const registered = JSON.parse(usersRaw);
         const uIdx = registered.findIndex((u: any) => u.username.toLowerCase() === req.username.toLowerCase());
@@ -215,11 +233,12 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
           };
 
           userObj.activeBings = [...(userObj.activeBings || []), newActiveBing];
-          localStorage.setItem('bing9ja_registered_users', JSON.stringify(registered));
+          localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registered));
           setRegisteredUsers(registered);
+          setDocumentData('users', userObj.username.toLowerCase(), userObj);
 
           // Append a positive purchase transaction log to user history
-          const savedTx = localStorage.getItem('bing9ja_transactions');
+          const savedTx = localStorage.getItem('goldrush9ja_transactions');
           let txs: any[] = [];
           if (savedTx) {
             txs = JSON.parse(savedTx);
@@ -231,21 +250,23 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
             description: `Deployed ${service.title} (Approved)`,
             timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
             status: 'completed',
-            reference: req.reference
+            reference: req.reference,
+            username: req.username.toLowerCase()
           };
           txs = [purchaseTx, ...txs];
-          localStorage.setItem('bing9ja_transactions', JSON.stringify(txs));
+          localStorage.setItem('goldrush9ja_transactions', JSON.stringify(txs));
+          setDocumentData('transactions', purchaseTx.id, purchaseTx);
         }
       }
 
-      addToast(`Bing contract for ${service.title} approved successfully for ${req.username}!`, 'success');
+      addToast(`GoldRush contract for ${service.title} approved successfully for ${req.username}!`, 'success');
     } catch (e) {
       console.error(e);
     }
   };
 
   const handleDeclineBingPurchase = (reqId: string) => {
-    const saved = localStorage.getItem('bing9ja_bing_purchase_requests');
+    const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (!saved) return;
     try {
       const reqs: BingPurchaseRequest[] = JSON.parse(saved);
@@ -255,11 +276,12 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
       const req = reqs[reqIdx];
       req.status = 'declined';
 
-      localStorage.setItem('bing9ja_bing_purchase_requests', JSON.stringify(reqs));
+      localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(reqs));
       setBingPurchaseRequests(reqs);
+      setDocumentData('bing_purchase_requests', req.id, req);
 
       // Append a failed purchase transaction log to the transaction history so it shows up
-      const savedTx = localStorage.getItem('bing9ja_transactions');
+      const savedTx = localStorage.getItem('goldrush9ja_transactions');
       let txs: any[] = [];
       if (savedTx) {
         txs = JSON.parse(savedTx);
@@ -268,15 +290,17 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
         id: 'TX-' + Math.floor(100000 + Math.random() * 900000),
         type: 'purchase',
         amount: req.price,
-        description: `Bing Purchase: ${req.serviceTitle} (Declined: Please upload right payment)`,
+        description: `GoldRush Purchase: ${req.serviceTitle} (Declined: Please upload right payment)`,
         timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
         status: 'failed',
-        reference: req.reference
+        reference: req.reference,
+        username: req.username.toLowerCase()
       };
       txs = [declineTx, ...txs];
-      localStorage.setItem('bing9ja_transactions', JSON.stringify(txs));
+      localStorage.setItem('goldrush9ja_transactions', JSON.stringify(txs));
+      setDocumentData('transactions', declineTx.id, declineTx);
 
-      addToast(`Bing purchase request declined for ${req.username}.`, 'error');
+      addToast(`GoldRush purchase request declined for ${req.username}.`, 'error');
     } catch (e) {
       console.error(e);
     }
@@ -378,7 +402,7 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
                 className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark"
-                placeholder="e.g. BING9JA FINANCIAL HUB CO."
+                placeholder="e.g. GOLDRUSH9JA FINANCIAL HUB CO."
                 required
               />
             </div>
@@ -390,7 +414,7 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
                 value={telegramChannel}
                 onChange={(e) => setTelegramChannel(e.target.value)}
                 className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark"
-                placeholder="e.g. @bing9ja"
+                placeholder="e.g. @goldrush9ja"
                 required
               />
             </div>

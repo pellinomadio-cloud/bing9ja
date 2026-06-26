@@ -40,7 +40,7 @@ export default function UpgradePaymentPage({
 
   // Check for any existing request of this user
   useEffect(() => {
-    const saved = localStorage.getItem('bing9ja_upgrade_requests');
+    const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
     if (saved) {
       try {
         const requests: UpgradeRequest[] = JSON.parse(saved);
@@ -136,7 +136,7 @@ export default function UpgradePaymentPage({
         reference: 'UPG-' + Math.floor(10000000 + Math.random() * 90000000)
       };
 
-      const saved = localStorage.getItem('bing9ja_upgrade_requests');
+      const saved = localStorage.getItem('goldrush9ja_upgrade_requests');
       let requests: UpgradeRequest[] = [];
       if (saved) {
         try {
@@ -150,7 +150,7 @@ export default function UpgradePaymentPage({
       const filtered = requests.filter(r => !(r.username.toLowerCase() === user.username.toLowerCase() && r.targetTier === selectedTier.level));
       filtered.push(newRequest);
 
-      localStorage.setItem('bing9ja_upgrade_requests', JSON.stringify(filtered));
+      localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(filtered));
       setPendingRequest(newRequest);
       setDeclinedRequest(null); // Clear active decline warning upon re-submission
       setSubmitting(false);

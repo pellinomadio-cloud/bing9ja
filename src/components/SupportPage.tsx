@@ -85,7 +85,7 @@ export default function SupportPage({
           </div>
           <h3 className="font-extrabold text-base text-primary-medium">Official Telegram Community</h3>
           <p className="text-xs text-purple-400 font-medium max-w-sm mx-auto leading-relaxed">
-            Join the official Bing9ja Telegram broadcast group. Stay up to date with core updates, secure node yields, VIP events, and cash giveaways.
+            Join the official GoldRush9ja Telegram broadcast group. Stay up to date with core updates, secure node yields, VIP events, and cash giveaways.
           </p>
         </div>
 

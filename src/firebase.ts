@@ -83,10 +83,31 @@ export async function getCollectionData<T>(collectionName: string): Promise<T[]>
   }
 }
 
+export function cleanUndefined(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefined(item));
+  }
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const cleaned: any = {};
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (val !== undefined) {
+        cleaned[key] = cleanUndefined(val);
+      }
+    }
+    return cleaned;
+  }
+  return obj;
+}
+
 export async function setDocumentData(collectionName: string, docId: string, data: any): Promise<void> {
   const path = `${collectionName}/${docId}`;
   try {
-    await setDoc(doc(db, collectionName, docId), data);
+    const cleanedData = cleanUndefined(data);
+    await setDoc(doc(db, collectionName, docId), cleanedData);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }

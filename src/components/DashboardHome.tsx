@@ -49,7 +49,7 @@ export default function DashboardHome({
   });
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://bing9ja.com/join?ref=${user.username}`);
+    navigator.clipboard.writeText(`https://goldrush9ja.online/join?ref=${user.username}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

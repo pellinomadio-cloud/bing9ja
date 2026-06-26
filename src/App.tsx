@@ -31,12 +31,12 @@ interface Toast {
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('bing9ja_user');
+    const saved = localStorage.getItem('goldrush9ja_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('bing9ja_transactions');
+    const saved = localStorage.getItem('goldrush9ja_transactions');
     if (saved) {
       return JSON.parse(saved);
     }
@@ -60,7 +60,7 @@ export default function App() {
         // Load Registered Users
         const fUsers = await getCollectionData<any>('users');
         if (fUsers && fUsers.length > 0 && active) {
-          localStorage.setItem('bing9ja_registered_users', JSON.stringify(fUsers));
+          localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(fUsers));
           
           // If we have an active user, update their local record with the one in Firestore
           if (user) {
@@ -93,20 +93,24 @@ export default function App() {
         // Load Upgrade Requests
         const fUpgrades = await getCollectionData<any>('upgrade_requests');
         if (fUpgrades && fUpgrades.length > 0 && active) {
-          localStorage.setItem('bing9ja_upgrade_requests', JSON.stringify(fUpgrades));
+          localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(fUpgrades));
         }
 
         // Load Node Purchases
         const fPurchases = await getCollectionData<any>('bing_purchase_requests');
         if (fPurchases && fPurchases.length > 0 && active) {
-          localStorage.setItem('bing9ja_bing_purchase_requests', JSON.stringify(fPurchases));
+          localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(fPurchases));
         }
 
         // Load System Company Settings
         const fSettings = await getCollectionData<any>('system');
         const companyDetailsSetting = fSettings.find((s: any) => s.id === 'company_details');
         if (companyDetailsSetting && active) {
-          localStorage.setItem('bing9ja_company_details', JSON.stringify(companyDetailsSetting));
+          localStorage.setItem('goldrush9ja_company_details', JSON.stringify(companyDetailsSetting));
+        }
+        const bannedUsersSetting = fSettings.find((s: any) => s.id === 'banned_users');
+        if (bannedUsersSetting && active) {
+          localStorage.setItem('goldrush9ja_banned_users', JSON.stringify(bannedUsersSetting.usernames || []));
         }
       } catch (err) {
         console.error('Error in loadFromFirestore:', err);
@@ -129,7 +133,7 @@ export default function App() {
     if (!user) return;
     
     // Find matching record from registered users list to get the password
-    const savedUsers = localStorage.getItem('bing9ja_registered_users');
+    const savedUsers = localStorage.getItem('goldrush9ja_registered_users');
     let password = 'password123';
     if (savedUsers) {
       try {
@@ -163,7 +167,7 @@ export default function App() {
   useEffect(() => {
     const handleSyncRequests = () => {
       try {
-        const upgradesRaw = localStorage.getItem('bing9ja_upgrade_requests');
+        const upgradesRaw = localStorage.getItem('goldrush9ja_upgrade_requests');
         if (upgradesRaw) {
           const reqs = JSON.parse(upgradesRaw);
           reqs.forEach((r: any) => {
@@ -171,7 +175,7 @@ export default function App() {
           });
         }
 
-        const bingsRaw = localStorage.getItem('bing9ja_bing_purchase_requests');
+        const bingsRaw = localStorage.getItem('goldrush9ja_bing_purchase_requests');
         if (bingsRaw) {
           const reqs = JSON.parse(bingsRaw);
           reqs.forEach((r: any) => {
@@ -193,7 +197,7 @@ export default function App() {
 
     // Fetch pending upgrades
     try {
-      const upgradeSaved = localStorage.getItem('bing9ja_upgrade_requests');
+      const upgradeSaved = localStorage.getItem('goldrush9ja_upgrade_requests');
       if (upgradeSaved) {
         const reqs = JSON.parse(upgradeSaved);
         const userPendingUpgrade = reqs.filter((r: any) => 
@@ -220,7 +224,7 @@ export default function App() {
 
     // Fetch pending purchase requests
     try {
-      const bingsSaved = localStorage.getItem('bing9ja_bing_purchase_requests');
+      const bingsSaved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
       if (bingsSaved) {
         const reqs = JSON.parse(bingsSaved);
         const userPendingBings = reqs.filter((r: any) => 
@@ -251,17 +255,17 @@ export default function App() {
   // Sync user state to local storage
   useEffect(() => {
     if (user) {
-      localStorage.setItem('bing9ja_user', JSON.stringify(user));
+      localStorage.setItem('goldrush9ja_user', JSON.stringify(user));
     } else {
-      localStorage.removeItem('bing9ja_user');
+      localStorage.removeItem('goldrush9ja_user');
     }
   }, [user]);
 
   // Ensure registered users array is initialized and filter out any pre-seeded mock users
   useEffect(() => {
-    const usersRaw = localStorage.getItem('bing9ja_registered_users');
+    const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
     if (!usersRaw) {
-      localStorage.setItem('bing9ja_registered_users', JSON.stringify([]));
+      localStorage.setItem('goldrush9ja_registered_users', JSON.stringify([]));
     } else {
       try {
         const users = JSON.parse(usersRaw);
@@ -272,11 +276,11 @@ export default function App() {
           
           // Only update if we actually removed some mock accounts
           if (filteredUsers.length !== users.length) {
-            localStorage.setItem('bing9ja_registered_users', JSON.stringify(filteredUsers));
+            localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(filteredUsers));
           }
         }
       } catch (e) {
-        localStorage.setItem('bing9ja_registered_users', JSON.stringify([]));
+        localStorage.setItem('goldrush9ja_registered_users', JSON.stringify([]));
       }
     }
   }, []);
@@ -284,7 +288,7 @@ export default function App() {
   // Sync current user state back into registered users database
   useEffect(() => {
     if (!user) return;
-    const usersRaw = localStorage.getItem('bing9ja_registered_users');
+    const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
     let registeredUsers: any[] = [];
     if (usersRaw) {
       try {
@@ -316,13 +320,13 @@ export default function App() {
         password: 'password123'
       });
     }
-    localStorage.setItem('bing9ja_registered_users', JSON.stringify(registeredUsers));
+    localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registeredUsers));
   }, [user]);
 
   // Periodic/Action-based check to see if admin approved an upgrade or changed something
   useEffect(() => {
     if (!user) return;
-    const usersRaw = localStorage.getItem('bing9ja_registered_users');
+    const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
     if (usersRaw) {
       try {
         const registeredUsers = JSON.parse(usersRaw);
@@ -348,9 +352,9 @@ export default function App() {
   // Sync transactions to local storage
   useEffect(() => {
     if (transactions.length > 0) {
-      localStorage.setItem('bing9ja_transactions', JSON.stringify(transactions));
+      localStorage.setItem('goldrush9ja_transactions', JSON.stringify(transactions));
     } else {
-      localStorage.removeItem('bing9ja_transactions');
+      localStorage.removeItem('goldrush9ja_transactions');
     }
   }, [transactions]);
 
@@ -371,7 +375,7 @@ export default function App() {
     
     setTransactions([initialTx]);
     setActiveTab('home');
-    addToast(`Welcome to bing9ja, ${newUser.username}! ₦6,700.00 signup credit applied.`, 'success');
+    addToast(`Welcome to GoldRush9ja, ${newUser.username}! ₦6,700.00 signup credit applied.`, 'success');
   };
 
   // Toast helper
@@ -459,7 +463,7 @@ export default function App() {
       id: generateId(),
       type: 'earnings',
       amount: unclaimedEarnings,
-      description: 'Claimed Bing Mining Yields',
+      description: 'Claimed GoldRush Mining Yields',
       timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
       status: 'completed',
       reference: generateReference()
@@ -700,8 +704,8 @@ export default function App() {
     setUser(null);
     setTransactions([]);
     setActiveTab('home');
-    localStorage.removeItem('bing9ja_user');
-    localStorage.removeItem('bing9ja_transactions');
+    localStorage.removeItem('goldrush9ja_user');
+    localStorage.removeItem('goldrush9ja_transactions');
     addToast('Demo sandbox reset completed successfully!', 'success');
   };
 
@@ -709,7 +713,7 @@ export default function App() {
   const handleSignOut = () => {
     setUser(null);
     setActiveTab('home');
-    localStorage.removeItem('bing9ja_user');
+    localStorage.removeItem('goldrush9ja_user');
     addToast('Logged out securely.', 'info');
   };
 
@@ -741,7 +745,7 @@ export default function App() {
 
   const isUserBanned = (() => {
     if (!user) return false;
-    const savedBanned = localStorage.getItem('bing9ja_banned_users');
+    const savedBanned = localStorage.getItem('goldrush9ja_banned_users');
     if (savedBanned) {
       const bannedList: string[] = JSON.parse(savedBanned);
       return bannedList.includes(user.username);
@@ -805,7 +809,7 @@ export default function App() {
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
               <div className="w-4.5 h-4.5 bg-primary-medium rounded-sm transform rotate-45"></div>
             </div>
-            <span className="text-base sm:text-lg font-black tracking-tight">BING9JA</span>
+            <span className="text-base sm:text-lg font-black tracking-tight">GOLDRUSH9JA</span>
             <span className="hidden sm:inline-block text-[9px] bg-white/10 border border-white/20 px-1.5 py-0.5 rounded font-bold tracking-wide">
               CBN SECURED
             </span>
@@ -1043,7 +1047,7 @@ export default function App() {
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-purple-100 py-2.5 px-6 shadow-2xl z-40 flex justify-between items-center max-w-2xl mx-auto rounded-t-3xl">
         {[
           { id: 'home', label: 'Home', icon: HomeIcon },
-          { id: 'bingshop', label: 'Bing Shop', icon: Flame, badge: user.activeBings.filter(b => !b.isCompleted).length > 0 },
+          { id: 'bingshop', label: 'GoldRush Shop', icon: Flame, badge: user.activeBings.filter(b => !b.isCompleted).length > 0 },
           { id: 'referrals', label: 'Refer & Earn', icon: Gift },
           { id: 'me', label: 'Me', icon: Layers }
         ].map(item => {

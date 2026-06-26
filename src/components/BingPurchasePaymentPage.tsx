@@ -39,7 +39,7 @@ export default function BingPurchasePaymentPage({
 
   // Check for existing pending request for this specific service
   useEffect(() => {
-    const saved = localStorage.getItem('bing9ja_bing_purchase_requests');
+    const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (saved) {
       try {
         const requests: BingPurchaseRequest[] = JSON.parse(saved);
@@ -130,10 +130,10 @@ export default function BingPurchasePaymentPage({
         paymentProofUrl: fileBase64,
         status: 'pending',
         timestamp: new Date().toLocaleString('en-NG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short', year: 'numeric' }),
-        reference: 'BNG-' + Math.floor(10000000 + Math.random() * 90000000)
+        reference: 'GR9-' + Math.floor(10000000 + Math.random() * 90000000)
       };
 
-      const saved = localStorage.getItem('bing9ja_bing_purchase_requests');
+      const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
       let requests: BingPurchaseRequest[] = [];
       if (saved) {
         try {
@@ -147,7 +147,7 @@ export default function BingPurchasePaymentPage({
       const filtered = requests.filter(r => !(r.username.toLowerCase() === user.username.toLowerCase() && r.serviceId === selectedService.id && r.status !== 'pending'));
       filtered.push(newRequest);
 
-      localStorage.setItem('bing9ja_bing_purchase_requests', JSON.stringify(filtered));
+      localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(filtered));
       setPendingRequest(newRequest);
       setSubmitting(false);
       addToast(`Purchase proof submitted! Pending Admin verification.`, 'success');

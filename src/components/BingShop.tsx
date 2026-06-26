@@ -24,7 +24,7 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
 
   // Load purchase requests
   useEffect(() => {
-    const saved = localStorage.getItem('bing9ja_bing_purchase_requests');
+    const saved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (saved) {
       try {
         const requests = JSON.parse(saved);
@@ -64,9 +64,9 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
           <div>
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-purple-300" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-purple-200">The Bing Ecosystem</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-purple-200">The GoldRush Ecosystem</span>
             </div>
-            <h1 className="text-2xl font-black mt-1">Bing Shop Portal</h1>
+            <h1 className="text-2xl font-black mt-1">GoldRush Shop Portal</h1>
             <p className="text-purple-200 text-xs mt-1 max-w-sm">
               Deploy automated digital hardware nodes. Each node streams daily yields directly to your bankroll.
             </p>
@@ -90,7 +90,7 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
           }`}
         >
           <ShoppingBag size={15} />
-          <span>Browse 15 Bing Services</span>
+          <span>Browse 15 GoldRush Services</span>
         </button>
         <button
           type="button"
@@ -276,7 +276,7 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
               </div>
               <h3 className="font-bold text-base">No active contracts found</h3>
               <p className="text-xs text-purple-400 max-w-xs mx-auto">
-                You haven't bought any Bing services yet! Go to the shop and deploy your first virtual machine node.
+                You haven't bought any GoldRush services yet! Go to the shop and deploy your first virtual machine node.
               </p>
               <button
                 type="button"
@@ -409,7 +409,7 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
               {/* Safety notice */}
               <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-2.5 text-[11px] text-emerald-700 font-medium">
                 <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
-                <span>Yield fully audited. Backed by bing9ja reserves.</span>
+                <span>Yield fully audited. Backed by goldrush9ja reserves.</span>
               </div>
 
               <div className="flex gap-3 pt-2">

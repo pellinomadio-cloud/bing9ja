@@ -41,7 +41,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       setLoading(false);
       
       // Load registered users from localStorage
-      const usersRaw = localStorage.getItem('bing9ja_registered_users');
+      const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
       let registeredUsers: any[] = [];
       try {
         if (usersRaw) {
@@ -66,7 +66,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           return;
         }
 
-        const generatedReferralCode = 'B9J-' + Math.floor(100000 + Math.random() * 900000);
+        const generatedReferralCode = 'GR9-' + Math.floor(100000 + Math.random() * 900000);
         
         const newUser: User = {
           username: trimmedUsername,
@@ -83,10 +83,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         // Also store password inside the record for simplified validation
         const userToSave = { ...newUser, password: trimmedPassword };
         registeredUsers.push(userToSave);
-        localStorage.setItem('bing9ja_registered_users', JSON.stringify(registeredUsers));
+        localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registeredUsers));
         
         // Also set this user as the currently active one
-        localStorage.setItem('bing9ja_current_user', JSON.stringify(newUser));
+        localStorage.setItem('goldrush9ja_current_user', JSON.stringify(newUser));
 
         onAuthSuccess(newUser);
       } else {
@@ -102,7 +102,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
         // Strip password for safety inside the runtime User type
         const { password: _, ...cleanedUser } = matchingUser;
-        localStorage.setItem('bing9ja_current_user', JSON.stringify(cleanedUser));
+        localStorage.setItem('goldrush9ja_current_user', JSON.stringify(cleanedUser));
         onAuthSuccess(cleanedUser as User);
       }
     }, 1200);
@@ -131,7 +131,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             </div>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight" id="app-logo">
-            bing<span className="text-primary-accent">9ja</span>
+            goldrush<span className="text-primary-accent">9ja</span>
           </h1>
           <p className="text-purple-200 text-xs mt-1 font-medium tracking-widest uppercase">
             Premium Service & Investment Hub
@@ -294,7 +294,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
       {/* Footer copyright */}
       <p className="text-purple-400/50 text-xs mt-8 font-medium">
-        © 2026 bing9ja Inc. Licensed by CBN. All Rights Reserved.
+        © 2026 goldrush9ja Inc. Licensed by CBN. All Rights Reserved.
       </p>
     </div>
   );

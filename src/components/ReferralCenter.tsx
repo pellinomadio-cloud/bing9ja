@@ -108,7 +108,7 @@ export default function ReferralCenter({ user }: { user: User }) {
         <div className="space-y-3.5">
           {[
             { step: '1', title: 'Share Code', desc: 'Send your referral credentials or link to friends, family, or social groups.' },
-            { step: '2', title: 'Friend Registers', desc: 'They complete their registration on bing9ja with your referral code entered.' },
+            { step: '2', title: 'Friend Registers', desc: 'They complete their registration on GoldRush9ja with your referral code entered.' },
             { step: '3', title: '₦16,890 Reward Issued', desc: 'Your account balance is instantly credited with the bounty payout.' }
           ].map((s) => (
             <div key={s.step} className="flex gap-3.5">
