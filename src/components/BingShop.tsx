@@ -36,6 +36,16 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
     }
   }, [user.username]);
 
+  const isServiceOwnedOrPending = (serviceId: string): 'active' | 'pending' | null => {
+    const hasActive = user.activeBings.some(b => b.serviceId === serviceId && !b.isCompleted);
+    if (hasActive) return 'active';
+
+    const hasPending = purchaseRequests.some(r => r.serviceId === serviceId && r.status === 'pending');
+    if (hasPending) return 'pending';
+
+    return null;
+  };
+
   const filteredServices = BING_SERVICES.filter(service => {
     if (selectedCategory === 'All') return true;
     return service.category === selectedCategory;
@@ -249,15 +259,44 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
                         >
                           <Info size={15} />
                         </button>
-                        <button
-                          type="button"
-                          id={`buy-btn-${service.id}`}
-                          onClick={() => onBuyBing(service)}
-                          className="flex-1 py-3 text-xs font-extrabold rounded-2xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 bg-primary-dark text-white hover:bg-primary-brand active:scale-[0.98]"
-                        >
-                          <span>Lease Node Contract</span>
-                          <ArrowRight size={14} />
-                        </button>
+                        {(() => {
+                          const status = isServiceOwnedOrPending(service.id);
+                          if (status === 'active') {
+                            return (
+                              <button
+                                type="button"
+                                disabled
+                                className="flex-1 py-3 text-xs font-extrabold rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center gap-1.5 opacity-90 cursor-not-allowed"
+                              >
+                                <CheckCircle2 size={14} className="text-emerald-600" />
+                                <span>Active Node Deployed</span>
+                              </button>
+                            );
+                          }
+                          if (status === 'pending') {
+                            return (
+                              <button
+                                type="button"
+                                disabled
+                                className="flex-1 py-3 text-xs font-extrabold rounded-2xl bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center gap-1.5 opacity-90 cursor-not-allowed"
+                              >
+                                <Clock size={14} className="text-amber-600 animate-spin" />
+                                <span>Pending Approval</span>
+                              </button>
+                            );
+                          }
+                          return (
+                            <button
+                              type="button"
+                              id={`buy-btn-${service.id}`}
+                              onClick={() => onBuyBing(service)}
+                              className="flex-1 py-3 text-xs font-extrabold rounded-2xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 bg-primary-dark text-white hover:bg-primary-brand active:scale-[0.98]"
+                            >
+                              <span>Lease Node Contract</span>
+                              <ArrowRight size={14} />
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                   </motion.div>
@@ -421,17 +460,46 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  id="buy-detail-modal"
-                  onClick={() => {
-                    onBuyBing(showDetailModal);
-                    setShowDetailModal(null);
-                  }}
-                  className="flex-1 py-3 text-xs font-bold rounded-xl text-white bg-primary-dark hover:bg-primary-brand active:scale-[0.98] cursor-pointer"
-                >
-                  Lease Now
-                </button>
+                {(() => {
+                  const status = isServiceOwnedOrPending(showDetailModal.id);
+                  if (status === 'active') {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 py-3 text-xs font-bold rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed flex items-center justify-center gap-1.5 opacity-90"
+                      >
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        <span>Active Node</span>
+                      </button>
+                    );
+                  }
+                  if (status === 'pending') {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 py-3 text-xs font-bold rounded-xl bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed flex items-center justify-center gap-1.5 opacity-90"
+                      >
+                        <Clock size={13} className="text-amber-600 animate-spin" />
+                        <span>Pending</span>
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      id="buy-detail-modal"
+                      onClick={() => {
+                        onBuyBing(showDetailModal);
+                        setShowDetailModal(null);
+                      }}
+                      className="flex-1 py-3 text-xs font-bold rounded-xl text-white bg-primary-dark hover:bg-primary-brand active:scale-[0.98] cursor-pointer"
+                    >
+                      Lease Now
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           </motion.div>

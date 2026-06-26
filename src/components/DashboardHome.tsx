@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Eye, EyeOff, Plus, ArrowUpRight, ArrowDownLeft, Shield, 
   ChevronRight, Bell, Smartphone, HelpCircle, Award, 
-  Layers, Gift, Wallet, TrendingUp, History, CheckCircle, Flame, Copy, Globe
+  Layers, Gift, Wallet, TrendingUp, History, CheckCircle, Flame, Copy, Globe, XCircle
 } from 'lucide-react';
 import { User, Transaction, TierLevel } from '../types';
 import { formatNaira, TIERS, BING_SERVICES } from '../data';
@@ -32,6 +32,50 @@ export default function DashboardHome({
   const [showBalance, setShowBalance] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'inflow' | 'outflow'>('all');
   const [copied, setCopied] = useState(false);
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [readMessageIds, setReadMessageIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load messages from localStorage
+    const savedMsgs = localStorage.getItem('goldrush9ja_messages');
+    if (savedMsgs) {
+      try {
+        const parsed = JSON.parse(savedMsgs);
+        // Filter messages for this user or 'all'
+        const userMsgs = parsed.filter((m: any) => 
+          m.recipient === 'all' || 
+          m.recipient?.toLowerCase() === user.username.toLowerCase()
+        );
+        // Sort descending by timestamp (newest first)
+        userMsgs.sort((a: any, b: any) => b.id.localeCompare(a.id));
+        setMessages(userMsgs);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Load read message IDs
+    const savedReadIds = localStorage.getItem('goldrush9ja_read_message_ids');
+    if (savedReadIds) {
+      try {
+        setReadMessageIds(JSON.parse(savedReadIds));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [user.username, showNotifications]);
+
+  const unreadMessagesCount = messages.filter(m => !readMessageIds.includes(m.id)).length;
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(true);
+    // Mark all as read when opening
+    const newReadIds = [...new Set([...readMessageIds, ...messages.map(m => m.id)])];
+    setReadMessageIds(newReadIds);
+    localStorage.setItem('goldrush9ja_read_message_ids', JSON.stringify(newReadIds));
+  };
 
   const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
   const limitPercent = Math.min((user.balance / currentTierInfo.limit) * 100, 100);
@@ -94,6 +138,19 @@ export default function DashboardHome({
         </div>
 
         <div className="flex items-center gap-2">
+          <button 
+            type="button"
+            className="p-2.5 bg-primary-light rounded-xl hover:bg-purple-100 transition-colors relative cursor-pointer"
+            onClick={handleOpenNotifications}
+            title="Corporate Announcements"
+          >
+            <Bell className="h-5 w-5 text-primary-brand" />
+            {unreadMessagesCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4.5 w-4.5 rounded-full bg-rose-500 text-white font-extrabold text-[9px] flex items-center justify-center animate-bounce shadow">
+                {unreadMessagesCount}
+              </span>
+            )}
+          </button>
           <button 
             type="button"
             className="p-2.5 bg-primary-light rounded-xl hover:bg-purple-100 transition-colors relative cursor-pointer"
@@ -386,6 +443,69 @@ export default function DashboardHome({
         </div>
 
       </div>
+
+      {/* Notifications Inbox Modal Overlay */}
+      {showNotifications && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-fade-in">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl border border-purple-100 flex flex-col max-h-[80vh]"
+          >
+            <div className="bg-gradient-to-r from-primary-medium to-purple-950 p-5 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-purple-300 animate-pulse" />
+                <div>
+                  <h3 className="text-sm font-black">Official Notifications</h3>
+                  <p className="text-[10px] text-purple-200">Inbox & Corporate Announcements</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowNotifications(false)}
+                className="p-1 hover:bg-white/10 rounded-lg text-purple-200 transition-colors cursor-pointer"
+              >
+                <XCircle size={18} />
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto space-y-3.5 flex-1 scrollbar-thin">
+              {messages.length === 0 ? (
+                <div className="text-center py-12 text-purple-300 text-xs font-semibold space-y-2">
+                  <Bell className="h-8 w-8 text-purple-200 mx-auto opacity-40" />
+                  <p>Your inbox is currently empty.</p>
+                  <p className="text-[10px] text-purple-400 font-normal">Check back later for system announcements.</p>
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <div 
+                    key={msg.id}
+                    className="bg-purple-50/40 border border-purple-100/50 p-4 rounded-2xl space-y-1.5 text-left"
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="text-[8px] font-black tracking-wide text-rose-600 uppercase bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md">
+                        {msg.sender === 'Admin' ? 'Management' : msg.sender}
+                      </span>
+                      <span className="text-[9px] text-purple-400 font-medium font-mono">{msg.timestamp}</span>
+                    </div>
+                    <h4 className="font-extrabold text-xs text-primary-dark">{msg.title}</h4>
+                    <p className="text-xs text-purple-950/80 leading-relaxed whitespace-pre-wrap font-medium">{msg.body}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 border-t border-purple-50 bg-purple-50/20 text-center">
+              <button
+                onClick={() => setShowNotifications(false)}
+                className="w-full py-2.5 bg-primary-dark hover:bg-black text-white text-xs font-bold rounded-xl transition-all cursor-pointer uppercase tracking-wider"
+              >
+                Close Inbox
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }

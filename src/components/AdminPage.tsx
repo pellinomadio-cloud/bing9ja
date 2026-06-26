@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, ShieldAlert, UserX, UserCheck, Search, Users, 
-  AlertTriangle, ShieldCheck, Check, X, FileText, Cpu, Coins 
+  AlertTriangle, ShieldCheck, Check, X, FileText, Cpu, Coins,
+  MessageSquare, Send, Edit, Wallet
 } from 'lucide-react';
-import { User, ActiveBing } from '../types';
+import { User, ActiveBing, AdminMessage } from '../types';
 import { formatNaira, BING_SERVICES, getCompanyDetails, saveCompanyDetails } from '../data';
 import { UpgradeRequest } from './UpgradePaymentPage';
 import { BingPurchaseRequest } from './BingPurchasePaymentPage';
@@ -20,6 +21,16 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
   const [upgradeRequests, setUpgradeRequests] = useState<UpgradeRequest[]>([]);
   const [bingPurchaseRequests, setBingPurchaseRequests] = useState<BingPurchaseRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // States for Editing User Balance
+  const [editingBalanceUsername, setEditingBalanceUsername] = useState<string | null>(null);
+  const [newBalanceValue, setNewBalanceValue] = useState<string>('');
+
+  // States for Sending Corporate Messages
+  const [msgRecipient, setMsgRecipient] = useState('all');
+  const [msgTitle, setMsgTitle] = useState('');
+  const [msgBody, setMsgBody] = useState('');
+  const [sentMessages, setSentMessages] = useState<AdminMessage[]>([]);
 
   // Company and Telegram channel details state
   const [bankName, setBankName] = useState('');
@@ -44,6 +55,15 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
     const savedBingPurchases = localStorage.getItem('goldrush9ja_bing_purchase_requests');
     if (savedBingPurchases) {
       setBingPurchaseRequests(JSON.parse(savedBingPurchases));
+    }
+
+    const savedMessages = localStorage.getItem('goldrush9ja_messages');
+    if (savedMessages) {
+      try {
+        setSentMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     // Load company details
@@ -306,6 +326,59 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
     }
   };
 
+  const handleSaveBalance = (username: string) => {
+    const val = parseFloat(newBalanceValue);
+    if (isNaN(val) || val < 0) {
+      addToast('Please enter a valid positive balance amount.', 'error');
+      return;
+    }
+
+    const updated = registeredUsers.map(u => {
+      if (u.username.toLowerCase() === username.toLowerCase()) {
+        const uObj = { ...u, balance: val };
+        setDocumentData('users', username.toLowerCase(), uObj);
+        return uObj;
+      }
+      return u;
+    });
+
+    setRegisteredUsers(updated);
+    localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(updated));
+    setEditingBalanceUsername(null);
+    addToast(`Balance updated to ${formatNaira(val)} for ${username.toUpperCase()}!`, 'success');
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msgTitle.trim() || !msgBody.trim()) {
+      addToast('Please fill in both title and message body.', 'error');
+      return;
+    }
+
+    const newMessage: AdminMessage = {
+      id: 'MSG-' + Math.floor(100000 + Math.random() * 900000),
+      recipient: msgRecipient.toLowerCase(),
+      title: msgTitle.trim(),
+      body: msgBody.trim(),
+      timestamp: new Date().toLocaleString('en-NG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }),
+      sender: 'Admin'
+    };
+
+    // Save to Firestore messages collection
+    setDocumentData('messages', newMessage.id, newMessage);
+
+    // Update state and local storage
+    const updatedMessages = [newMessage, ...sentMessages];
+    setSentMessages(updatedMessages);
+    localStorage.setItem('goldrush9ja_messages', JSON.stringify(updatedMessages));
+
+    addToast(`Corporate message sent successfully to ${msgRecipient === 'all' ? 'all users' : '@' + msgRecipient.toUpperCase()}!`, 'success');
+    
+    // Reset form
+    setMsgTitle('');
+    setMsgBody('');
+  };
+
   const filtered = registeredUsers.filter(u => 
     u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -430,6 +503,94 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Corporate Broadcast & Instant Messenger */}
+      <div className="bg-white rounded-3xl border border-primary-medium/10 p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 border-b border-purple-50 pb-3">
+          <MessageSquare className="text-rose-600 h-5 w-5" />
+          <div>
+            <h4 className="font-extrabold text-xs uppercase tracking-wider text-primary-medium">
+              Corporate Broadcast & Instant Messenger
+            </h4>
+            <p className="text-[10px] text-purple-400 font-medium">Send real-time announcement notifications to all users at once or separately</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSendMessage} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold text-purple-400 block">Recipient User</label>
+              <select
+                value={msgRecipient}
+                onChange={(e) => setMsgRecipient(e.target.value)}
+                className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark"
+              >
+                <option value="all">📢 Broadcast to All Users</option>
+                {registeredUsers.map(u => (
+                  <option key={u.username} value={u.username.toLowerCase()}>
+                    👤 Direct to @{u.username.toUpperCase()} ({u.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold text-purple-400 block">Message Title / Subject</label>
+              <input
+                type="text"
+                value={msgTitle}
+                onChange={(e) => setMsgTitle(e.target.value)}
+                className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark"
+                placeholder="e.g. System Maintenance Update"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-purple-400 block">Message Content Body</label>
+            <textarea
+              value={msgBody}
+              onChange={(e) => setMsgBody(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 bg-purple-50/40 border border-purple-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-semibold text-primary-dark leading-relaxed"
+              placeholder="Type your official announcement or notification message here..."
+              required
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-primary-dark hover:bg-black text-white rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+            >
+              <Send size={12} />
+              <span>Broadcast Message</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Sent Messages History List */}
+        {sentMessages.length > 0 && (
+          <div className="pt-3 border-t border-purple-50 space-y-2.5">
+            <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-purple-400">Recently Sent Corporate Communications</h5>
+            <div className="space-y-2 max-h-[160px] overflow-y-auto scrollbar-thin pr-1">
+              {sentMessages.slice(0, 3).map(m => (
+                <div key={m.id} className="bg-purple-50/20 border border-purple-100/30 p-3 rounded-xl space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[8px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded uppercase">
+                      To: {m.recipient === 'all' ? 'All Users' : `@${m.recipient.toUpperCase()}`}
+                    </span>
+                    <span className="text-[8px] font-mono text-purple-400 font-medium">{m.timestamp}</span>
+                  </div>
+                  <h6 className="font-extrabold text-[11px] text-primary-dark">{m.title}</h6>
+                  <p className="text-[10px] text-purple-950/70 truncate">{m.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upgrade Requests Queue Section */}
@@ -672,9 +833,46 @@ export default function AdminPage({ onBack, addToast }: AdminPageProps) {
                       </span>
                     </div>
                     <p className="text-[10px] text-purple-400 font-mono">{usr.email}</p>
-                    <p className="text-[9px] text-purple-400">
-                      Balance: <span className="font-bold text-primary-medium">{formatNaira(usr.balance)}</span> • Tier: <span className="font-bold">Level {usr.tier}</span>
-                    </p>
+                    {editingBalanceUsername === usr.username ? (
+                      <div className="flex items-center gap-1.5 mt-1.5" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-[9px] font-bold text-rose-600 uppercase">New Balance (₦):</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={newBalanceValue}
+                          onChange={(e) => setNewBalanceValue(e.target.value)}
+                          className="px-2 py-0.5 text-xs bg-white border border-purple-200 rounded-lg w-24 focus:outline-none focus:ring-1 focus:ring-rose-500 font-bold text-primary-dark"
+                          placeholder="Amount"
+                        />
+                        <button
+                          onClick={() => handleSaveBalance(usr.username)}
+                          className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[9px] uppercase cursor-pointer"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingBalanceUsername(null)}
+                          className="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-100 rounded-lg font-bold text-[9px] uppercase cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-[9px] text-purple-400 flex items-center gap-1.5">
+                        <span>Balance: <span className="font-extrabold text-primary-medium">{formatNaira(usr.balance)}</span></span>
+                        <button
+                          onClick={() => {
+                            setEditingBalanceUsername(usr.username);
+                            setNewBalanceValue(usr.balance.toString());
+                          }}
+                          className="text-rose-600 hover:text-rose-700 underline font-extrabold text-[9px] uppercase cursor-pointer"
+                          title="Click to edit balance"
+                        >
+                          [Edit]
+                        </button>
+                        <span>• Tier: <span className="font-bold">Level {usr.tier}</span></span>
+                      </p>
+                    )}
                   </div>
 
                   <button

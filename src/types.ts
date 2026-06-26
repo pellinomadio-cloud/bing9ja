@@ -65,3 +65,13 @@ export interface CompanyDetails {
   telegramChannel: string;
 }
 
+export interface AdminMessage {
+  id: string;
+  recipient: string; // 'all' or username
+  title: string;
+  body: string;
+  timestamp: string;
+  sender: string;
+}
+
+

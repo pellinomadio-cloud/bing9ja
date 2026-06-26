@@ -112,6 +112,12 @@ export default function App() {
         if (bannedUsersSetting && active) {
           localStorage.setItem('goldrush9ja_banned_users', JSON.stringify(bannedUsersSetting.usernames || []));
         }
+
+        // Load Corporate Admin Messages
+        const fMessages = await getCollectionData<any>('messages');
+        if (fMessages && active) {
+          localStorage.setItem('goldrush9ja_messages', JSON.stringify(fMessages));
+        }
       } catch (err) {
         console.error('Error in loadFromFirestore:', err);
       }
@@ -528,6 +534,33 @@ export default function App() {
   // Redirect to Bing Purchase and checkout flow
   const handleBuyBing = (service: BingService) => {
     if (!user) return;
+
+    // Prevent double purchasing if already owned/active
+    const hasActive = user.activeBings.some(b => b.serviceId === service.id && !b.isCompleted);
+    if (hasActive) {
+      addToast(`You already have an active leased contract for ${service.title}. You cannot purchase the same contract twice!`, 'error');
+      return;
+    }
+
+    // Prevent double purchasing if already pending review
+    const bingsSaved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
+    if (bingsSaved) {
+      try {
+        const reqs = JSON.parse(bingsSaved);
+        const hasPending = reqs.some((r: any) => 
+          r.username.toLowerCase() === user.username.toLowerCase() && 
+          r.serviceId === service.id && 
+          r.status === 'pending'
+        );
+        if (hasPending) {
+          addToast(`You already have a pending lease request for ${service.title}. Please wait for corporate approval!`, 'error');
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     setSelectedBingService(service);
     setActiveTab('bing-purchase-payment');
   };
