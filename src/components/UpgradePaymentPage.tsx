@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Upload, FileText, CheckCircle2, AlertCircle, RefreshCw, Layers, Copy, Check } from 'lucide-react';
 import { User, TierInfo } from '../types';
 import { formatNaira, getCompanyDetails } from '../data';
@@ -37,6 +37,7 @@ export default function UpgradePaymentPage({
   const [copiedName, setCopiedName] = useState(false);
   const [pendingRequest, setPendingRequest] = useState<UpgradeRequest | null>(null);
   const [declinedRequest, setDeclinedRequest] = useState<UpgradeRequest | null>(null);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   // Check for any existing request of this user
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function UpgradePaymentPage({
       setTimeout(() => setCopiedName(false), 2000);
     }
     addToast('Copied to clipboard!', 'success');
+    setShowWarningModal(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -401,6 +403,55 @@ export default function UpgradePaymentPage({
           )}
         </button>
       </form>
+
+      {/* Warning Notice Modal */}
+      <AnimatePresence>
+        {showWarningModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop overlay */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWarningModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-xs"
+            />
+            
+            {/* Content Card */}
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 max-w-sm w-full border border-rose-100 shadow-2xl relative z-10 text-center space-y-4"
+            >
+              <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <AlertCircle size={32} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-black text-lg text-rose-950 uppercase tracking-tight">CRITICAL PAYMENT NOTICE</h3>
+                <p className="text-xs font-semibold text-rose-700/90 leading-relaxed bg-rose-50 p-3.5 rounded-2xl border border-rose-100">
+                  ⚠️ Please do NOT use <span className="font-extrabold text-rose-900 underline">OPay</span> or <span className="font-extrabold text-rose-900 underline">PalmPay</span> to make payments/transfers for any activation or upgrade!
+                </p>
+                <p className="text-xs text-primary-medium/80 leading-relaxed">
+                  Our automated bank settlement ledgers are incompatible with OPay and PalmPay transfer routes. Any funds sent via these channels will be rejected or lost. Use standard commercial banks only.
+                </p>
+                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 text-[10px] text-emerald-700 font-bold leading-normal">
+                  ✅ NOTE: You can withdraw your earnings to any bank account, including OPay and PalmPay without any restrictions.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowWarningModal(false)}
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-bold text-xs shadow-md shadow-rose-600/20 transition-all uppercase tracking-wider cursor-pointer"
+              >
+                I Understand, Proceed
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
