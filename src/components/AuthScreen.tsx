@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Mail, User as UserIcon, Lock, Sparkles, Smartphone, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
+import { TIERS } from '../data';
+import { setDocumentData } from '../firebase';
 
 interface AuthScreenProps {
   onAuthSuccess: (user: User) => void;
@@ -15,6 +17,29 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Capture referral code from URL query parameter or path on mount
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      let code = params.get('code');
+
+      // Fallback check in case it's in format: /ref?code=XYZ or direct URL matching
+      if (!code) {
+        const urlMatch = window.location.href.match(/[?&]code=([^&#]+)/);
+        if (urlMatch) {
+          code = urlMatch[1];
+        }
+      }
+
+      if (code) {
+        setReferralCode(code.trim().toUpperCase());
+        setIsRegister(true); // Default to register screen since they followed a referral link
+      }
+    } catch (e) {
+      console.error('Error auto-capturing referral code:', e);
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,18 +92,59 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         }
 
         const generatedReferralCode = 'GR9-' + Math.floor(100000 + Math.random() * 900000);
+        const referralCodeUsedStr = referralCode ? referralCode.trim().toUpperCase() : undefined;
         
         const newUser: User = {
           username: trimmedUsername,
           email: trimmedEmail,
-          referralCodeUsed: referralCode ? referralCode.trim().toUpperCase() : undefined,
+          referralCodeUsed: referralCodeUsedStr,
           ownReferralCode: generatedReferralCode,
           tier: 1,
           balance: 6700, // Starting balance of 6,700 Naira as requested
-          referralCount: referralCode ? 1 : 0,
+          referralCount: 0, // Brand new user starts with 0 referrals
           referralBonusEarned: 0,
           activeBings: []
         };
+
+        // If a valid referral code was used, credit the referrer
+        const referralBonusAmount = 16890;
+        if (referralCodeUsedStr) {
+          const referrerIdx = registeredUsers.findIndex(
+            (u: any) => u.ownReferralCode && u.ownReferralCode.toUpperCase() === referralCodeUsedStr
+          );
+          if (referrerIdx !== -1) {
+            const referrer = registeredUsers[referrerIdx];
+            const referrerTier = TIERS.find(t => t.level === referrer.tier) || TIERS[0];
+            const maxLimit = referrerTier.limit;
+
+            const oldBalance = referrer.balance || 0;
+            let newBalance = oldBalance + referralBonusAmount;
+            if (newBalance > maxLimit) {
+              newBalance = maxLimit; // Cap balance at Tier Limit
+            }
+
+            referrer.balance = newBalance;
+            referrer.referralCount = (referrer.referralCount || 0) + 1;
+            referrer.referralBonusEarned = (referrer.referralBonusEarned || 0) + referralBonusAmount;
+
+            registeredUsers[referrerIdx] = referrer;
+
+            // Generate an official transaction record for the referrer
+            const referralTx = {
+              id: 'tx-' + Math.random().toString(36).substring(2, 9),
+              username: referrer.username,
+              type: 'referral',
+              amount: referralBonusAmount,
+              description: `Referral Reward: @${trimmedUsername.toUpperCase()} registered`,
+              timestamp: new Date().toLocaleString('en-NG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }),
+              reference: 'TX-' + Math.floor(10000000 + Math.random() * 90000000).toString()
+            };
+
+            // Write updates to Firestore
+            setDocumentData('users', referrer.username.toLowerCase(), referrer).catch(err => console.error('Error syncing referrer:', err));
+            setDocumentData('transactions', referralTx.id, referralTx).catch(err => console.error('Error syncing referral transaction:', err));
+          }
+        }
 
         // Also store password inside the record for simplified validation
         const userToSave = { ...newUser, password: trimmedPassword };
