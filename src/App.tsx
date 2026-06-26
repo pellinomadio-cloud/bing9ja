@@ -91,25 +91,60 @@ export default function App() {
 
         // Load Transactions
         const fTxs = await getCollectionData<Transaction>('transactions');
-        if (fTxs && fTxs.length > 0 && active) {
-          if (user) {
-            const userTxs = fTxs.filter((t: any) => t.username?.toLowerCase() === user.username.toLowerCase());
-            if (userTxs.length > 0) {
-              setTransactions(userTxs);
-            }
+        if (fTxs && active && user) {
+          const userTxs = fTxs.filter((t: any) => t.username?.toLowerCase() === user.username.toLowerCase());
+          
+          // Merge local transactions to prevent losing recently added local transactions that haven't synced yet
+          const localSaved = localStorage.getItem('goldrush9ja_transactions');
+          let merged = [...userTxs];
+          if (localSaved) {
+            try {
+              const localTxs = JSON.parse(localSaved);
+              localTxs.forEach((lt: any) => {
+                if (!merged.some((t: any) => t.id === lt.id)) {
+                  merged.unshift(lt);
+                }
+              });
+            } catch (e) {}
           }
+          setTransactions(merged);
         }
 
         // Load Upgrade Requests
         const fUpgrades = await getCollectionData<any>('upgrade_requests');
-        if (fUpgrades && fUpgrades.length > 0 && active) {
-          localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(fUpgrades));
+        if (fUpgrades && active) {
+          const localSaved = localStorage.getItem('goldrush9ja_upgrade_requests');
+          let merged = [...fUpgrades];
+          if (localSaved) {
+            try {
+              const localReqs = JSON.parse(localSaved);
+              // For any local request that is pending, if it's not present in fUpgrades, keep it
+              localReqs.forEach((lr: any) => {
+                if (lr.status === 'pending' && !merged.some((r: any) => r.id === lr.id)) {
+                  merged.push(lr);
+                }
+              });
+            } catch (e) {}
+          }
+          localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(merged));
         }
 
         // Load Node Purchases
         const fPurchases = await getCollectionData<any>('bing_purchase_requests');
-        if (fPurchases && fPurchases.length > 0 && active) {
-          localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(fPurchases));
+        if (fPurchases && active) {
+          const localSaved = localStorage.getItem('goldrush9ja_bing_purchase_requests');
+          let merged = [...fPurchases];
+          if (localSaved) {
+            try {
+              const localReqs = JSON.parse(localSaved);
+              localReqs.forEach((lr: any) => {
+                if (lr.status === 'pending' && !merged.some((r: any) => r.id === lr.id)) {
+                  merged.push(lr);
+                }
+              });
+            } catch (e) {}
+          }
+          localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(merged));
         }
 
         // Load System Company Settings
@@ -781,8 +816,10 @@ export default function App() {
   // Sign out helper
   const handleSignOut = () => {
     setUser(null);
+    setTransactions([]);
     setActiveTab('home');
     localStorage.removeItem('goldrush9ja_user');
+    localStorage.removeItem('goldrush9ja_transactions');
     addToast('Logged out securely.', 'info');
   };
 

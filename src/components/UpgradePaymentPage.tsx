@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Upload, FileText, CheckCircle2, AlertCircle, RefreshCw, Layers, Copy, Check } from 'lucide-react';
 import { User, TierInfo } from '../types';
 import { formatNaira, getCompanyDetails } from '../data';
+import { setDocumentData } from '../firebase';
 
 export interface UpgradeRequest {
   id: string;
@@ -153,6 +154,12 @@ export default function UpgradePaymentPage({
       filtered.push(newRequest);
 
       localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(filtered));
+      
+      // Save directly to Firestore immediately
+      setDocumentData('upgrade_requests', newRequest.id, newRequest).catch(err => {
+        console.error('Error saving upgrade request directly:', err);
+      });
+
       setPendingRequest(newRequest);
       setDeclinedRequest(null); // Clear active decline warning upon re-submission
       setSubmitting(false);

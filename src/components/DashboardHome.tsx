@@ -144,35 +144,32 @@ export default function DashboardHome({
   return (
     <div className="space-y-4 pb-24 font-sans text-primary-dark">
       {/* Live Withdrawal Ticker Toast */}
-      <div className="relative z-20 overflow-hidden w-full" id="live-withdrawal-ticker-wrapper">
+      <div className="relative z-20 overflow-hidden w-full max-w-md mx-auto" id="live-withdrawal-ticker-wrapper">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentWithdrawalIndex}
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
-            className="bg-emerald-600 text-white rounded-3xl p-3 px-4 shadow-md border border-emerald-500/20 flex items-center justify-between gap-3"
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 150, damping: 18 }}
+            className="bg-emerald-600/95 backdrop-blur-xs text-white rounded-2xl p-1.5 px-3.5 shadow-sm border border-emerald-500/10 flex items-center justify-between gap-2.5"
             id={`withdrawal-alert-${currentWithdrawalIndex}`}
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
-                <CheckCircle size={16} className="text-white animate-pulse" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black tracking-widest uppercase text-emerald-100 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-ping"></span>
-                  Instant Payout Confirmed
-                </p>
-                <p className="text-xs sm:text-sm font-bold text-white leading-normal truncate">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
+              </span>
+              <div className="min-w-0 leading-tight">
+                <p className="text-[11px] font-bold text-white tracking-tight truncate">
                   <span className="font-extrabold text-amber-200">{liveWithdrawals[currentWithdrawalIndex].name}</span> withdrew{' '}
                   <span className="font-extrabold text-amber-200">{formatNaira(liveWithdrawals[currentWithdrawalIndex].amount)}</span> to{' '}
-                  <span className="font-extrabold underline decoration-amber-200/40">{liveWithdrawals[currentWithdrawalIndex].bank}</span>
+                  <span className="font-semibold text-emerald-100">{liveWithdrawals[currentWithdrawalIndex].bank}</span>
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[9px] bg-black/15 text-emerald-100 px-2 py-0.5 rounded-full font-bold">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[9px] bg-emerald-700/50 text-emerald-100 px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide">
                 just now
               </span>
             </div>

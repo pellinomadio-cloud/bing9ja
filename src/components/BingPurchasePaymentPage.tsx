@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Upload, FileText, CheckCircle2, Copy, Check, RefreshCw, Cpu, Coins, AlertCircle } from 'lucide-react';
 import { User, BingService, ActiveBing } from '../types';
 import { formatNaira, getCompanyDetails } from '../data';
+import { setDocumentData } from '../firebase';
 
 export interface BingPurchaseRequest {
   id: string;
@@ -150,6 +151,12 @@ export default function BingPurchasePaymentPage({
       filtered.push(newRequest);
 
       localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(filtered));
+      
+      // Save directly to Firestore immediately
+      setDocumentData('bing_purchase_requests', newRequest.id, newRequest).catch(err => {
+        console.error('Error saving purchase request directly:', err);
+      });
+
       setPendingRequest(newRequest);
       setSubmitting(false);
       addToast(`Purchase proof submitted! Pending Admin verification.`, 'success');
