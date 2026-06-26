@@ -8,6 +8,29 @@ import {
 import { User, Transaction, TierLevel } from '../types';
 import { formatNaira, TIERS, BING_SERVICES } from '../data';
 
+const liveWithdrawals = [
+  { name: "Gift O.", amount: 600000, bank: "Access Bank" },
+  { name: "Chinedu K.", amount: 350000, bank: "Guaranty Trust Bank (GTBank)" },
+  { name: "Abubakar M.", amount: 150000, bank: "United Bank for Africa (UBA)" },
+  { name: "Funmi A.", amount: 750000, bank: "Zenith Bank" },
+  { name: "Blessing I.", amount: 120000, bank: "First Bank of Nigeria" },
+  { name: "Nnamdi O.", amount: 480000, bank: "Fidelity Bank" },
+  { name: "Zainab S.", amount: 250000, bank: "Wema Bank" },
+  { name: "Olumide J.", amount: 95000, bank: "Sterling Bank" },
+  { name: "Kelechi U.", amount: 300000, bank: "Union Bank" },
+  { name: "Ibrahim A.", amount: 1200000, bank: "Stanbic IBTC" },
+  { name: "Emeka N.", amount: 500000, bank: "Access Bank" },
+  { name: "Chioma A.", amount: 80000, bank: "Guaranty Trust Bank (GTBank)" },
+  { name: "Yusuf D.", amount: 220000, bank: "United Bank for Africa (UBA)" },
+  { name: "Temitope B.", amount: 450000, bank: "Zenith Bank" },
+  { name: "Umar F.", amount: 130000, bank: "First Bank of Nigeria" },
+  { name: "Adeola G.", amount: 680000, bank: "Fidelity Bank" },
+  { name: "Efe O.", amount: 1100000, bank: "Stanbic IBTC" },
+  { name: "Patience E.", amount: 290000, bank: "Wema Bank" },
+  { name: "Tunde S.", amount: 180000, bank: "Sterling Bank" },
+  { name: "Aisha B.", amount: 350000, bank: "Union Bank" }
+];
+
 interface DashboardHomeProps {
   user: User;
   transactions: Transaction[];
@@ -36,6 +59,22 @@ export default function DashboardHome({
   const [showNotifications, setShowNotifications] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [readMessageIds, setReadMessageIds] = useState<string[]>([]);
+  const [currentWithdrawalIndex, setCurrentWithdrawalIndex] = useState(0);
+
+  useEffect(() => {
+    // Ticker rotation logic
+    const interval = setInterval(() => {
+      setCurrentWithdrawalIndex((prev) => {
+        let nextIndex = Math.floor(Math.random() * liveWithdrawals.length);
+        while (nextIndex === prev && liveWithdrawals.length > 1) {
+          nextIndex = Math.floor(Math.random() * liveWithdrawals.length);
+        }
+        return nextIndex;
+      });
+    }, 5500); // changes every 5.5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Load messages from localStorage
@@ -104,6 +143,43 @@ export default function DashboardHome({
 
   return (
     <div className="space-y-4 pb-24 font-sans text-primary-dark">
+      {/* Live Withdrawal Ticker Toast */}
+      <div className="relative z-20 overflow-hidden w-full" id="live-withdrawal-ticker-wrapper">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentWithdrawalIndex}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            className="bg-emerald-600 text-white rounded-3xl p-3 px-4 shadow-md border border-emerald-500/20 flex items-center justify-between gap-3"
+            id={`withdrawal-alert-${currentWithdrawalIndex}`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
+                <CheckCircle size={16} className="text-white animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black tracking-widest uppercase text-emerald-100 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-ping"></span>
+                  Instant Payout Confirmed
+                </p>
+                <p className="text-xs sm:text-sm font-bold text-white leading-normal truncate">
+                  <span className="font-extrabold text-amber-200">{liveWithdrawals[currentWithdrawalIndex].name}</span> withdrew{' '}
+                  <span className="font-extrabold text-amber-200">{formatNaira(liveWithdrawals[currentWithdrawalIndex].amount)}</span> to{' '}
+                  <span className="font-extrabold underline decoration-amber-200/40">{liveWithdrawals[currentWithdrawalIndex].bank}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[9px] bg-black/15 text-emerald-100 px-2 py-0.5 rounded-full font-bold">
+                just now
+              </span>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
       {/* Top Welcome Bar */}
       <div className="relative flex justify-between items-center bg-white p-4 rounded-3xl border border-primary-medium/10 shadow-sm" id="top-welcome-bar">
         <div className="flex items-center gap-3">
