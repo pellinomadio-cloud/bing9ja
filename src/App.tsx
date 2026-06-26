@@ -842,10 +842,7 @@ export default function App() {
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
               <div className="w-4.5 h-4.5 bg-primary-medium rounded-sm transform rotate-45"></div>
             </div>
-            <span className="text-base sm:text-lg font-black tracking-tight">GOLDRUSH9JA</span>
-            <span className="hidden sm:inline-block text-[9px] bg-white/10 border border-white/20 px-1.5 py-0.5 rounded font-bold tracking-wide">
-              CBN SECURED
-            </span>
+            <span className="text-xs sm:text-sm md:text-base font-black tracking-tight">GOLDRUSH9JA</span>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">

@@ -105,7 +105,7 @@ export default function DashboardHome({
   return (
     <div className="space-y-4 pb-24 font-sans text-primary-dark">
       {/* Top Welcome Bar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-3xl border border-primary-medium/10 shadow-sm" id="top-welcome-bar">
+      <div className="relative flex justify-between items-center bg-white p-4 rounded-3xl border border-primary-medium/10 shadow-sm" id="top-welcome-bar">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-primary-medium to-primary-brand flex items-center justify-center text-white font-bold text-lg shadow-inner">
@@ -114,8 +114,8 @@ export default function DashboardHome({
             {/* Medal badge based on tier */}
             <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full shadow border border-purple-100">
               <Award className={`h-5 w-5 ${
-                user.tier === 1 ? 'text-slate-400' :
-                user.tier === 2 ? 'text-amber-500' :
+                user.tier === 1 ? 'text-[#8B4513]' :
+                user.tier === 2 ? 'text-[#D4AF37]' :
                 user.tier === 3 ? 'text-indigo-400' :
                 'text-fuchsia-600 animate-bounce'
               }`} />
@@ -124,10 +124,10 @@ export default function DashboardHome({
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="font-bold text-base tracking-tight">Hi, {user.username.toUpperCase()}</h3>
-              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                user.tier === 1 ? 'bg-slate-100 text-slate-700' :
-                user.tier === 2 ? 'bg-amber-100 text-amber-800' :
-                user.tier === 3 ? 'bg-purple-100 text-purple-800' :
+              <span className={`absolute -top-2.5 right-6 text-[9px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider shadow-sm border ${
+                user.tier === 1 ? 'bg-[#8B4513] text-[#FFF8F3] border-[#70350B]' :
+                user.tier === 2 ? 'bg-[#D4AF37] text-amber-950 border-[#BFA12C]' :
+                user.tier === 3 ? 'bg-purple-600 text-white border-purple-700' :
                 'bg-black text-amber-400 border border-amber-500'
               }`}>
                 Lvl {user.tier}
@@ -150,14 +150,6 @@ export default function DashboardHome({
                 {unreadMessagesCount}
               </span>
             )}
-          </button>
-          <button 
-            type="button"
-            className="p-2.5 bg-primary-light rounded-xl hover:bg-purple-100 transition-colors relative cursor-pointer"
-            onClick={() => onNavigate('referrals')}
-          >
-            <Gift className="h-5 w-5 text-primary-brand" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary-accent animate-pulse"></span>
           </button>
           <button 
             type="button"
@@ -426,21 +418,7 @@ export default function DashboardHome({
           <ChevronRight className="h-5 w-5 text-purple-300 ml-auto flex-shrink-0" />
         </div>
 
-        {/* Security Check Indicator Banner */}
-        <div className="bg-white p-4 rounded-3xl border border-primary-medium/10 shadow-sm flex items-center gap-3.5" id="security-banner">
-          <div className="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
-            <Shield className="h-5.5 w-5.5" />
-          </div>
-          <div>
-            <h4 className="font-bold text-xs text-primary-dark">Certified Safe & Audited by CBN</h4>
-            <p className="text-[11px] text-purple-400 font-medium">
-              256-bit bank security is active. All Bing deposits and earnings are fully backed.
-            </p>
-          </div>
-          <span className="ml-auto text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-            ACTIVE
-          </span>
-        </div>
+
 
       </div>
 
