@@ -24,6 +24,7 @@ interface BingPurchasePaymentPageProps {
   addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
   purchaseRequests: any[];
   onPurchaseSubmitted: (newRequest: BingPurchaseRequest) => void;
+  onPurchaseWithBalance?: (service: BingService) => void;
 }
 
 export default function BingPurchasePaymentPage({
@@ -32,9 +33,13 @@ export default function BingPurchasePaymentPage({
   onBack,
   addToast,
   purchaseRequests,
-  onPurchaseSubmitted
+  onPurchaseSubmitted,
+  onPurchaseWithBalance
 }: BingPurchasePaymentPageProps) {
   const company = getCompanyDetails();
+  const [paymentMethod, setPaymentMethod] = useState<'balance' | 'bank'>(
+    user.balance >= selectedService.price ? 'balance' : 'bank'
+  );
   const [fileBase64, setFileBase64] = useState<string>('');
   const [fileName, setFileName] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
@@ -282,118 +287,223 @@ export default function BingPurchasePaymentPage({
         </div>
       </div>
 
-      {/* Company Bank Details with Copy button */}
-      <div className="bg-primary-dark text-white p-5 rounded-3xl border border-purple-950 space-y-4 shadow-md">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-amber-400 text-primary-dark font-black text-xs flex items-center justify-center">1</div>
-          <h4 className="font-extrabold text-xs uppercase tracking-wider text-amber-400">Step 1: Transfer Funds</h4>
-        </div>
-
-        <p className="text-xs leading-relaxed text-purple-200">
-          Leasing requires settlement directly to our corporate bank account. Transfer exactly <span className="text-white font-black">{formatNaira(selectedService.price)}</span> below:
-        </p>
-
-        {/* Bank Credentials Copyable Card */}
-        <div className="bg-white/10 border border-white/5 p-4 rounded-2xl space-y-3 text-xs">
-          <div className="flex justify-between border-b border-white/10 pb-2.5">
-            <span className="text-purple-300 font-medium">Settlement Bank:</span>
-            <span className="font-black text-white">{company.bankName}</span>
-          </div>
-          <div className="flex justify-between border-b border-white/10 pb-2.5 items-center">
-            <span className="text-purple-300 font-medium">Account Number:</span>
-            <div className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors border border-white/10">
-              <span className="font-mono font-black text-amber-300 tracking-wider text-sm select-all">{company.accountNumber}</span>
-              <button 
-                type="button"
-                onClick={() => handleCopy(company.accountNumber, 'acc')}
-                className="text-purple-300 hover:text-white cursor-pointer"
-              >
-                {copiedAcc ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-purple-300 font-medium">Account Name:</span>
-            <div className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors border border-white/10 max-w-[180px]">
-              <span className="font-black text-white text-[11px] truncate">{company.accountName}</span>
-              <button 
-                type="button"
-                onClick={() => handleCopy(company.accountName, 'name')}
-                className="text-purple-300 hover:text-white cursor-pointer flex-shrink-0"
-              >
-                {copiedName ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Payment Method Selector */}
+      <div className="bg-purple-50/50 p-1 rounded-2xl border border-purple-100 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setPaymentMethod('balance')}
+          className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            paymentMethod === 'balance'
+              ? 'bg-primary-brand text-white shadow-sm font-extrabold'
+              : 'text-purple-400 hover:text-primary-brand hover:bg-white/50'
+          }`}
+        >
+          <Coins size={14} />
+          <span>Pay with Wallet Balance</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setPaymentMethod('bank')}
+          className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            paymentMethod === 'bank'
+              ? 'bg-primary-brand text-white shadow-sm font-extrabold'
+              : 'text-purple-400 hover:text-primary-brand hover:bg-white/50'
+          }`}
+        >
+          <FileText size={14} />
+          <span>Bank Transfer</span>
+        </button>
       </div>
 
-      {/* Proof Submission Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-5 rounded-3xl border border-primary-medium/10 shadow-sm space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-primary-brand text-white font-black text-xs flex items-center justify-center">2</div>
-          <h4 className="font-black text-xs uppercase tracking-wider text-purple-400">Step 2: Submit screenshot</h4>
-        </div>
+      {paymentMethod === 'balance' ? (
+        <div className="bg-white p-6 rounded-3xl border border-primary-medium/10 shadow-sm space-y-6">
+          <div className="flex items-center gap-2.5">
+            <Coins size={22} className="text-primary-brand animate-bounce" />
+            <h3 className="font-extrabold text-sm text-primary-dark uppercase tracking-wider">Internal Wallet Payment</h3>
+          </div>
 
-        {/* Drag & Drop Upload Zone */}
-        <div 
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className="border-2 border-dashed border-purple-100 rounded-2xl hover:border-primary-brand hover:bg-purple-50/20 transition-all p-6 text-center cursor-pointer relative"
-        >
-          <input 
-            type="file" 
-            accept="image/*"
-            id="bing-proof-input"
-            onChange={handleFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-          />
-          <div className="space-y-2.5 pointer-events-none">
-            <div className="w-12 h-12 bg-purple-50 text-primary-brand rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <Upload size={22} />
+          <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100 space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-purple-400 font-medium">Available Wallet Balance:</span>
+              <span className="font-mono font-extrabold text-sm text-primary-brand">{formatNaira(user.balance)}</span>
             </div>
-            <div>
-              <p className="text-xs font-bold text-primary-medium">
-                {fileName ? `Selected: ${fileName}` : 'Click or Drag & Drop screenshot here'}
-              </p>
-              <p className="text-[10px] text-purple-400 mt-1">
-                Supports PNG, JPEG, or JPG (Max 2MB)
-              </p>
+            <div className="flex justify-between items-center text-xs border-t border-purple-100/60 pt-2.5">
+              <span className="text-purple-400 font-medium">Required Service Cost:</span>
+              <span className="font-mono font-extrabold text-sm text-primary-dark">-{formatNaira(selectedService.price)}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs border-t border-purple-100/60 pt-2.5">
+              <span className="text-purple-400 font-bold">Remaining Balance after purchase:</span>
+              <span className={`font-mono font-extrabold text-sm ${
+                user.balance >= selectedService.price ? 'text-emerald-600' : 'text-rose-600'
+              }`}>
+                {user.balance >= selectedService.price 
+                  ? formatNaira(user.balance - selectedService.price)
+                  : 'Insufficient Funds'
+                }
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Image Preview */}
-        {fileBase64 && (
-          <div className="p-3 bg-purple-50/50 rounded-2xl border border-purple-100/50 space-y-1.5">
-            <p className="text-[9px] uppercase tracking-wider text-purple-400 font-bold">Receipt Preview</p>
-            <div className="border border-purple-100 rounded-xl overflow-hidden max-h-36 flex items-center justify-center bg-white">
-              <img 
-                src={fileBase64} 
-                alt="Uploaded proof preview" 
-                className="object-contain max-h-36"
-                referrerPolicy="no-referrer"
-              />
+          {user.balance < selectedService.price ? (
+            <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 space-y-2">
+              <p className="font-extrabold">⚠️ Insufficient Wallet Balance!</p>
+              <p className="font-medium leading-relaxed">
+                You do not have enough funds in your dashboard balance to purchase this contract. Please select "Bank Transfer" as your payment method instead to fund or buy directly.
+              </p>
             </div>
-          </div>
-        )}
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={submitting || !fileBase64}
-          className="w-full mt-2 py-3 bg-primary-brand hover:bg-black disabled:opacity-50 text-white rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
-        >
-          {submitting ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
-            <>
-              <CheckCircle2 size={13} />
-              <span>Submit Purchase Proof</span>
-            </>
+            <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100 text-xs text-emerald-700 flex items-start gap-2.5">
+              <span className="text-base">⚡</span>
+              <p className="font-semibold leading-relaxed">
+                Paying with your wallet balance is fully automated and instantly deploys your mining node without waiting for administrator review.
+              </p>
+            </div>
           )}
-        </button>
-      </form>
+
+          <button
+            type="button"
+            disabled={user.balance < selectedService.price || submitting}
+            onClick={() => {
+              if (onPurchaseWithBalance) {
+                setSubmitting(true);
+                setTimeout(() => {
+                  onPurchaseWithBalance(selectedService);
+                  setSubmitting(false);
+                }, 1200);
+              }
+            }}
+            className="w-full py-3.5 bg-primary-brand hover:bg-black disabled:opacity-50 text-white rounded-2xl font-black text-xs shadow-md shadow-purple-950/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+          >
+            {submitting ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <CheckCircle2 size={14} />
+                <span>Confirm & Deploy Instantly</span>
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Company Bank Details with Copy button */}
+          <div className="bg-primary-dark text-white p-5 rounded-3xl border border-purple-950 space-y-4 shadow-md">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full bg-amber-400 text-primary-dark font-black text-xs flex items-center justify-center">1</div>
+              <h4 className="font-extrabold text-xs uppercase tracking-wider text-amber-400">Step 1: Transfer Funds</h4>
+            </div>
+
+            <p className="text-xs leading-relaxed text-purple-200">
+              Leasing requires settlement directly to our corporate bank account. Transfer exactly <span className="text-white font-black">{formatNaira(selectedService.price)}</span> below:
+            </p>
+
+            {/* Bank Credentials Copyable Card */}
+            <div className="bg-white/10 border border-white/5 p-4 rounded-2xl space-y-3 text-xs">
+              <div className="flex justify-between border-b border-white/10 pb-2.5">
+                <span className="text-purple-300 font-medium">Settlement Bank:</span>
+                <span className="font-black text-white">{company.bankName}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-2.5 items-center">
+                <span className="text-purple-300 font-medium">Account Number:</span>
+                <div className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors border border-white/10">
+                  <span className="font-mono font-black text-amber-300 tracking-wider text-sm select-all">{company.accountNumber}</span>
+                  <button 
+                    type="button"
+                    onClick={() => handleCopy(company.accountNumber, 'acc')}
+                    className="text-purple-300 hover:text-white cursor-pointer"
+                  >
+                    {copiedAcc ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-purple-300 font-medium">Account Name:</span>
+                <div className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors border border-white/10 max-w-[180px]">
+                  <span className="font-black text-white text-[11px] truncate">{company.accountName}</span>
+                  <button 
+                    type="button"
+                    onClick={() => handleCopy(company.accountName, 'name')}
+                    className="text-purple-300 hover:text-white cursor-pointer flex-shrink-0"
+                  >
+                    {copiedName ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Proof Submission Form */}
+          <form onSubmit={handleSubmit} className="bg-white p-5 rounded-3xl border border-primary-medium/10 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-full bg-primary-brand text-white font-black text-xs flex items-center justify-center">2</div>
+              <h4 className="font-black text-xs uppercase tracking-wider text-purple-400">Step 2: Submit screenshot</h4>
+            </div>
+
+            {/* Drag & Drop Upload Zone (Using fully native label wrapper for maximum old Android device touch compatibility) */}
+            <label 
+              htmlFor="bing-proof-input"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className="block border-2 border-dashed border-purple-200 rounded-2xl hover:border-primary-brand hover:bg-purple-50/10 transition-all p-6 text-center cursor-pointer relative bg-purple-50/5"
+            >
+              <input 
+                type="file" 
+                accept="image/png, image/jpeg, image/jpg, image/*"
+                id="bing-proof-input"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+              />
+              <div className="space-y-2.5">
+                <div className="w-12 h-12 bg-purple-50 text-primary-brand rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <Upload size={22} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-primary-medium">
+                    {fileName ? `Selected: ${fileName}` : 'Tap here to Select Receipt Image'}
+                  </p>
+                  <p className="text-[10px] text-purple-400 mt-1">
+                    Supports PNG, JPEG, or JPG (Max 2MB)
+                  </p>
+                </div>
+                <div className="inline-block px-3 py-1.5 bg-primary-brand text-white text-[10px] font-extrabold rounded-lg shadow-sm">
+                  Choose Screenshot File
+                </div>
+              </div>
+            </label>
+
+            {/* Image Preview */}
+            {fileBase64 && (
+              <div className="p-3 bg-purple-50/50 rounded-2xl border border-purple-100/50 space-y-1.5">
+                <p className="text-[9px] uppercase tracking-wider text-purple-400 font-bold">Receipt Preview</p>
+                <div className="border border-purple-100 rounded-xl overflow-hidden max-h-36 flex items-center justify-center bg-white">
+                  <img 
+                    src={fileBase64} 
+                    alt="Uploaded proof preview" 
+                    className="object-contain max-h-36"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={submitting || !fileBase64}
+              className="w-full mt-2 py-3 bg-primary-brand hover:bg-black disabled:opacity-50 text-white rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+            >
+              {submitting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <CheckCircle2 size={13} />
+                  <span>Submit Purchase Proof</span>
+                </>
+              )}
+            </button>
+          </form>
+        </>
+      )}
 
       {/* Warning Notice Modal */}
       <AnimatePresence>

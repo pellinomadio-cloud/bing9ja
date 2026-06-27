@@ -358,7 +358,7 @@ export default function DashboardHome({
                 { id: 'data', label: 'Mobile Data', icon: TrendingUp, color: 'bg-purple-50 text-purple-600' },
                 { id: 'withdraw', label: 'Withdraw', icon: ArrowUpRight, color: 'bg-purple-50 text-purple-600' },
                 { id: 'exl', label: 'EXL', icon: Globe, color: 'bg-purple-50 text-purple-600' },
-                { id: 'me', label: 'My Limits', icon: Layers, color: 'bg-purple-50 text-purple-600' },
+                { id: 'me', label: 'Upgrade', icon: Award, color: 'bg-primary-accent text-primary-medium shadow-md shadow-primary-accent/30 font-extrabold animate-pulse' },
                 { id: 'help', label: 'Support', icon: HelpCircle, color: 'bg-purple-50 text-purple-600' },
               ].map((srv) => {
                 const Icon = srv.icon;
@@ -381,7 +381,11 @@ export default function DashboardHome({
                     <div className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${srv.color}`}>
                       <Icon className="h-5.5 w-5.5" />
                     </div>
-                    <span className={`text-[10px] font-bold tracking-tight ${srv.id === 'bingshop' ? 'text-amber-700 font-extrabold' : 'text-primary-dark/80'}`}>
+                    <span className={`text-[10px] font-bold tracking-tight ${
+                      srv.id === 'bingshop' ? 'text-amber-700 font-extrabold' : 
+                      srv.id === 'me' ? 'text-amber-600 font-extrabold animate-pulse' : 
+                      'text-primary-dark/80'
+                    }`}>
                       {srv.label}
                     </span>
                   </button>

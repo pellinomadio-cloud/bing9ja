@@ -626,6 +626,72 @@ export default function App() {
     setSelectedBingService(service);
     setActiveTab('bing-purchase-payment');
   };
+  
+  // Purchase and instantly deploy mining node using dashboard/wallet balance
+  const handlePurchaseBingWithBalance = (service: BingService) => {
+    if (!user) return;
+    if (user.balance < service.price) {
+      addToast(`Insufficient Balance! Your current balance is ${formatNaira(user.balance)}, but ${service.title} costs ${formatNaira(service.price)}. Please fund your wallet.`, 'error');
+      return;
+    }
+
+    const newBalance = user.balance - service.price;
+    const newActiveBing: ActiveBing = {
+      id: 'active-' + Math.floor(100000 + Math.random() * 900000),
+      serviceId: service.id,
+      title: service.title,
+      price: service.price,
+      dailyIncome: service.dailyIncome,
+      totalIncome: service.totalIncome,
+      timestampBought: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
+      durationDays: service.durationDays,
+      lastClaimedTimestamp: new Date().toISOString(),
+      accumulatedUnclaimed: 0,
+      totalClaimed: 0,
+      isCompleted: false
+    };
+
+    const purchaseTx: Transaction = {
+      id: generateId(),
+      type: 'purchase',
+      amount: service.price,
+      description: `Deployed ${service.title} (Paid with Wallet Balance)`,
+      timestamp: new Date().toLocaleDateString('en-NG', { hour: '2-digit', minute: '2-digit' }),
+      status: 'completed',
+      reference: generateReference()
+    };
+
+    const updatedUser = {
+      ...user,
+      balance: newBalance,
+      activeBings: [...(user.activeBings || []), newActiveBing]
+    };
+
+    setUser(updatedUser);
+    setTransactions(prev => [purchaseTx, ...prev]);
+
+    // Also update this user inside registered users in local storage
+    const usersRaw = localStorage.getItem('goldrush9ja_registered_users');
+    if (usersRaw) {
+      try {
+        const registered = JSON.parse(usersRaw);
+        const uIdx = registered.findIndex((u: any) => u.username.toLowerCase() === user.username.toLowerCase());
+        if (uIdx !== -1) {
+          registered[uIdx] = {
+            ...registered[uIdx],
+            balance: newBalance,
+            activeBings: updatedUser.activeBings
+          };
+          localStorage.setItem('goldrush9ja_registered_users', JSON.stringify(registered));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    addToast(`Successfully purchased and deployed ${service.title} using your dashboard balance!`, 'success');
+    setActiveTab('bingshop');
+  };
 
   // Simulate a referral signup
   const handleSimulateReferral = (friendName: string) => {
@@ -902,7 +968,7 @@ export default function App() {
               <span className="text-[10px] font-black uppercase text-purple-200">LVL {user.tier}</span>
               {user.tier < 4 && (
                 <button 
-                  onClick={() => setShowUpgradeModal(true)}
+                  onClick={() => setActiveTab('me')}
                   className="text-[9px] bg-primary-accent text-primary-medium font-black px-1.5 py-0.5 rounded-md hover:bg-white transition-colors uppercase cursor-pointer"
                 >
                   Upgrade
@@ -933,7 +999,7 @@ export default function App() {
                 user={user} 
                 transactions={displayedTransactions} 
                 onNavigate={setActiveTab}
-                onOpenUpgradeModal={() => setShowUpgradeModal(true)}
+                onOpenUpgradeModal={() => setActiveTab('me')}
                 onAddMoneySimulation={handleAddMoneySimulation}
                 onSimulateWithdrawal={handleSimulateWithdrawal}
                 onClaimAllEarnings={handleClaimAllEarnings}
@@ -1123,6 +1189,7 @@ export default function App() {
                 addToast={addToast}
                 purchaseRequests={purchaseRequests}
                 onPurchaseSubmitted={(newReq) => setPurchaseRequests(prev => [newReq, ...prev])}
+                onPurchaseWithBalance={handlePurchaseBingWithBalance}
               />
             </motion.div>
           )}
@@ -1209,9 +1276,6 @@ export default function App() {
                           <h4 className="font-bold text-xs text-primary-dark">{tier.name}</h4>
                           <span className="text-[10px] text-purple-400 font-mono">Cost: {formatNaira(tier.cost)}</span>
                         </div>
-                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                          Limit: {formatNaira(tier.limit)}
-                        </span>
                       </div>
                       
                       {!isUnlocked && (

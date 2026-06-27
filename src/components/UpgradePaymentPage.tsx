@@ -355,33 +355,37 @@ export default function UpgradePaymentPage({
           <h4 className="font-black text-xs uppercase tracking-wider text-purple-400">Step 2: Upload Proof receipt</h4>
         </div>
 
-        {/* Drag & Drop Upload Zone */}
-        <div 
+        {/* Drag & Drop Upload Zone (Using fully native label wrapper for maximum old Android device touch compatibility) */}
+        <label 
+          htmlFor="payment-proof-input"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className="border-2 border-dashed border-purple-100 rounded-2xl hover:border-primary-brand hover:bg-purple-50/20 transition-all p-6 text-center cursor-pointer relative"
+          className="block border-2 border-dashed border-purple-200 rounded-2xl hover:border-primary-brand hover:bg-purple-50/10 transition-all p-6 text-center cursor-pointer relative bg-purple-50/5"
         >
           <input 
             type="file" 
-            accept="image/*"
+            accept="image/png, image/jpeg, image/jpg, image/*"
             id="payment-proof-input"
             onChange={handleFileChange}
             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
           />
-          <div className="space-y-2.5 pointer-events-none">
+          <div className="space-y-2.5">
             <div className="w-12 h-12 bg-purple-50 text-primary-brand rounded-full flex items-center justify-center mx-auto shadow-inner">
               <Upload size={22} />
             </div>
             <div>
               <p className="text-xs font-bold text-primary-medium">
-                {fileName ? `Selected: ${fileName}` : 'Click or Drag & Drop screenshot here'}
+                {fileName ? `Selected: ${fileName}` : 'Tap here to Select Receipt Image'}
               </p>
               <p className="text-[10px] text-purple-400 mt-1">
                 Supports PNG, JPEG, or JPG (Max 2MB)
               </p>
             </div>
+            <div className="inline-block px-3 py-1.5 bg-primary-brand text-white text-[10px] font-extrabold rounded-lg shadow-sm">
+              Choose Screenshot File
+            </div>
           </div>
-        </div>
+        </label>
 
         {/* Image Preview if selected */}
         {fileBase64 && (

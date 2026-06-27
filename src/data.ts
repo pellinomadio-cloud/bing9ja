@@ -7,7 +7,7 @@ export const TIERS: TierInfo[] = [
     limit: 100000,
     cost: 0,
     perks: [
-      "Maximum Balance Limit: ₦100,000",
+      "Store Unlimited Dashboard balance",
       "Standard Withdrawal Processing (24h)",
       "Access to basic GoldRush Cloud & Vault plans",
       "Standard referral benefits"
@@ -19,7 +19,7 @@ export const TIERS: TierInfo[] = [
     limit: 500000,
     cost: 7600,
     perks: [
-      "Maximum Balance Limit: ₦500,000",
+      "Commercial Bank Cashouts Unlocked",
       "Express Withdrawal Processing (4h)",
       "Access to Node & Server GoldRush plans",
       "1.5x speed on daily claims",
@@ -32,7 +32,7 @@ export const TIERS: TierInfo[] = [
     limit: 2500000,
     cost: 15000,
     perks: [
-      "Maximum Balance Limit: ₦2,500,000",
+      "Immediate Direct Bank Settled Payouts",
       "Instant Withdrawal Processing (30m)",
       "Access to high-yield Arbitrage plans",
       "Zero fees on internal fund transfers",
@@ -45,7 +45,7 @@ export const TIERS: TierInfo[] = [
     limit: 10000000,
     cost: 35000,
     perks: [
-      "Maximum Balance Limit: ₦10,000,000",
+      "Premium VIP Priority Cashouts Unlocked",
       "Immediate VIP direct channel payouts",
       "Access to all Premium & Executive GoldRush Nodes",
       "Dedicated 24/7 Account Success Manager",
