@@ -182,12 +182,12 @@ export default function BingShop({ user, onBuyBing, onClaimEarning, onNavigate }
           </div>
 
           {/* Service Limit Warning Alert */}
-          <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-3xl flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-purple-50 border border-purple-200/50 p-4 rounded-3xl flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-primary-brand flex-shrink-0 mt-0.5" />
             <div className="text-xs">
-              <span className="font-extrabold text-amber-800">Capacity Warning: </span>
-              <span className="text-amber-700/95 font-medium">
-                Your current account limits capping is determined by your Tier Level (Current: Tier {user.tier}). Ensure you upgrade your Tier if your overall accumulated balance exceeds ₦{user.tier === 1 ? '100,000' : user.tier === 2 ? '500,000' : '2,500,000'}.
+              <span className="font-extrabold text-primary-dark">Cashout Security Alert: </span>
+              <span className="text-purple-700 font-medium">
+                Your current account tier has unlimited dashboard balance storage. However, you must upgrade your account to Tier 2 to unlock Commercial Bank Cashouts and retrieve your node earnings!
               </span>
             </div>
           </div>

@@ -522,13 +522,6 @@ export default function App() {
   const handleClaimAllEarnings = () => {
     if (!user || unclaimedEarnings <= 0) return;
 
-    const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
-    
-    if (user.balance + unclaimedEarnings > currentTierInfo.limit) {
-      addToast(`Tier Overload! Claiming ${formatNaira(unclaimedEarnings)} exceeds your Tier ${user.tier} ceiling limit of ${formatNaira(currentTierInfo.limit)}. Upgrade Tier first!`, 'error');
-      return;
-    }
-
     const newBalance = user.balance + unclaimedEarnings;
     const updatedBings = user.activeBings.map(b => {
       const claimedSum = b.totalClaimed + b.accumulatedUnclaimed;
@@ -565,13 +558,7 @@ export default function App() {
     const targetBing = user.activeBings.find(b => b.id === activeBingId);
     if (!targetBing || targetBing.accumulatedUnclaimed <= 0) return;
 
-    const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
     const amountToClaim = targetBing.accumulatedUnclaimed;
-
-    if (user.balance + amountToClaim > currentTierInfo.limit) {
-      addToast(`Ceiling Block! Your Tier ${user.tier} cap is ${formatNaira(currentTierInfo.limit)}. Upgrade account level to claim.`, 'error');
-      return;
-    }
 
     const newBalance = user.balance + amountToClaim;
     const updatedBings = user.activeBings.map(b => {
@@ -644,12 +631,6 @@ export default function App() {
   const handleSimulateReferral = (friendName: string) => {
     if (!user) return;
     const referralBonusAmount = 16890;
-    const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
-
-    if (user.balance + referralBonusAmount > currentTierInfo.limit) {
-      addToast(`Limit Violation! Receiving ₦16,890.00 referral bounty exceeds your Tier level limit (${formatNaira(currentTierInfo.limit)}). Upgrade your Tier!`, 'error');
-      return;
-    }
 
     const newBalance = user.balance + referralBonusAmount;
     const referralTx: Transaction = {
@@ -676,12 +657,6 @@ export default function App() {
   const handleAddMoneySimulation = () => {
     if (!user) return;
     const depositAmount = 25000; // Adding 25k to balance
-    const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
-
-    if (user.balance + depositAmount > currentTierInfo.limit) {
-      addToast(`Adding ${formatNaira(depositAmount)} exceeds your Tier ${user.tier} max limit of ${formatNaira(currentTierInfo.limit)}. Please upgrade first!`, 'error');
-      return;
-    }
 
     const newBalance = user.balance + depositAmount;
     const depositTx: Transaction = {

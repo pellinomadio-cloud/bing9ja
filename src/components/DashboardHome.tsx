@@ -295,14 +295,13 @@ export default function DashboardHome({
 
             {/* Progress status */}
             <div className="bg-black/20 rounded-2xl p-3 mt-3">
-              <div className="flex justify-between items-center mb-1 text-[9px]">
-                <span className="uppercase tracking-wider opacity-60 font-bold">Limit Capacity Status</span>
-                <span className="font-bold">{limitPercent.toFixed(1)}% Used</span>
+              <div className="flex justify-between items-center text-[9px]">
+                <span className="uppercase tracking-wider opacity-60 font-bold">Wallet Storage Capacity</span>
+                <span className="font-extrabold text-amber-300">UNLIMITED</span>
               </div>
-              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: `${limitPercent}%` }}></div>
-              </div>
-              <p className="text-[8px] mt-1 opacity-60">Max Balance Limit: {formatNaira(currentTierInfo.limit)}</p>
+              <p className="text-[8px] mt-1 opacity-60">
+                {user.tier < 2 ? '⚠️ Upgrade to Tier 2 to enable Commercial Bank Cashout' : '✅ Tier 2 Secured: Bank withdrawals active'}
+              </p>
             </div>
           </div>
 

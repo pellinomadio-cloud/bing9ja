@@ -53,11 +53,11 @@ export default function UserProfileMe({ user, onUpgradeTier, onSignOut }: UserPr
 
         <div className="grid grid-cols-2 gap-4 text-xs">
           <div className="bg-purple-50/40 p-3 rounded-2xl border border-purple-100/30">
-            <span className="text-purple-400 font-bold block">MAXIMUM LIMIT</span>
-            <span className="text-base font-extrabold text-primary-dark font-mono">{formatNaira(currentTierInfo.limit)}</span>
+            <span className="text-purple-400 font-bold block">WALLET CAPACITY</span>
+            <span className="text-base font-extrabold text-emerald-600 font-mono">UNLIMITED</span>
           </div>
           <div className="bg-purple-50/40 p-3 rounded-2xl border border-purple-100/30">
-            <span className="text-purple-400 font-bold block">CURRENT UTILIZED</span>
+            <span className="text-purple-400 font-bold block">CURRENT BALANCE</span>
             <span className="text-base font-extrabold text-primary-brand font-mono">{formatNaira(user.balance)}</span>
           </div>
         </div>
@@ -65,7 +65,9 @@ export default function UserProfileMe({ user, onUpgradeTier, onSignOut }: UserPr
         <div className="p-3 bg-purple-50 rounded-2xl border border-purple-100/30 flex items-start gap-2.5 text-[11px] text-purple-700">
           <ShieldAlert size={16} className="text-primary-brand flex-shrink-0 mt-0.5" />
           <p className="font-medium">
-            Standard Tier 1 accounts have a hard ceiling limit of ₦100,000. Upgrading to higher tiers permanently expands your wallet's balance limit capacity.
+            {user.tier < 2 
+              ? "Your dashboard balance is unlimited. However, you need to upgrade to Tier 2 to unlock Commercial Bank Cashouts."
+              : "Your account is on Tier 2 or higher. Direct Commercial Bank Cashouts are fully unlocked."}
           </p>
         </div>
       </div>

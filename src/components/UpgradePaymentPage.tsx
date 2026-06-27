@@ -294,7 +294,7 @@ export default function UpgradePaymentPage({
           </span>
         </div>
         <p className="text-[11px] text-purple-400 font-medium leading-relaxed">
-          Unlock maximum balance limit up to <span className="font-extrabold text-primary-medium">{formatNaira(selectedTier.limit)}</span>. Upgrading requires verification of funds transferred directly to the designated company bank account.
+          Unlock commercial bank cashout permissions and retrieve accumulated node profits. Upgrading requires verification of funds transferred directly to the designated company bank account.
         </p>
       </div>
 

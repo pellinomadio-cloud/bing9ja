@@ -123,9 +123,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
             const oldBalance = referrer.balance || 0;
             let newBalance = oldBalance + referralBonusAmount;
-            if (newBalance > maxLimit) {
-              newBalance = maxLimit; // Cap balance at Tier Limit
-            }
 
             referrer.balance = newBalance;
             referrer.referralCount = (referrer.referralCount || 0) + 1;
