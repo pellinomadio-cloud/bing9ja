@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home as HomeIcon, Flame, Gift, Layers, X, CheckCircle, 
@@ -69,6 +69,20 @@ export default function App() {
 
   const company = getCompanyDetails();
 
+  // Rate-limiting and redundant write guards for Firestore Integration
+  const syncedTransactionIdsRef = useRef<Set<string>>(new Set());
+  const lastSyncedUserFingerprintRef = useRef<string>('');
+  const syncedUpgradeRequestsRef = useRef<Set<string>>(new Set());
+  const syncedPurchaseRequestsRef = useRef<Set<string>>(new Set());
+
+  const getUserSyncFingerprint = (u: User | null): string => {
+    if (!u) return '';
+    const bingsPart = (u.activeBings || [])
+      .map(b => `${b.id}:${b.totalClaimed}:${b.isCompleted}`)
+      .join(',');
+    return `${u.username}:${u.email}:${u.tier}:${u.balance}:${u.referralCount}:${u.referralBonusEarned}:${bingsPart}`;
+  };
+
   // --- FIRESTORE INTEGRATION SYNC ENGINE ---
   // 1. Initial Boot & Periodic Sync: pull all records from Firestore to cache in local storage
   useEffect(() => {
@@ -94,14 +108,18 @@ export default function App() {
                 referralBonusChanged ||
                 activeBingsChanged
               ) {
-                setUser({
+                const updatedUser = {
                   ...user,
                   tier: latestUser.tier,
                   balance: latestUser.balance,
                   referralCount: latestUser.referralCount || 0,
                   referralBonusEarned: latestUser.referralBonusEarned || 0,
                   activeBings: latestUser.activeBings || []
-                });
+                };
+                setUser(updatedUser);
+                lastSyncedUserFingerprintRef.current = getUserSyncFingerprint(updatedUser);
+              } else {
+                lastSyncedUserFingerprintRef.current = getUserSyncFingerprint(user);
               }
             }
           }
@@ -126,6 +144,11 @@ export default function App() {
             } catch (e) {}
           }
           setTransactions(merged);
+          
+          // Populate transaction cache
+          merged.forEach((t: any) => {
+            syncedTransactionIdsRef.current.add(t.id);
+          });
         }
 
         // Load Upgrade Requests
@@ -146,6 +169,11 @@ export default function App() {
           }
           localStorage.setItem('goldrush9ja_upgrade_requests', JSON.stringify(merged));
           setUpgradeRequests(merged);
+          
+          // Populate upgrade requests cache
+          merged.forEach((r: any) => {
+            syncedUpgradeRequestsRef.current.add(`${r.id}_${r.status}`);
+          });
         }
 
         // Load Node Purchases
@@ -165,6 +193,11 @@ export default function App() {
           }
           localStorage.setItem('goldrush9ja_bing_purchase_requests', JSON.stringify(merged));
           setPurchaseRequests(merged);
+          
+          // Populate purchase requests cache
+          merged.forEach((r: any) => {
+            syncedPurchaseRequestsRef.current.add(`${r.id}_${r.status}`);
+          });
         }
 
         // Load System Company Settings
@@ -219,6 +252,13 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     
+    // Guard: Only sync to Firestore if there are semantic changes to the user object
+    const currentFingerprint = getUserSyncFingerprint(user);
+    if (lastSyncedUserFingerprintRef.current === currentFingerprint) {
+      return;
+    }
+    lastSyncedUserFingerprintRef.current = currentFingerprint;
+    
     // Find matching record from registered users list to get the password
     const savedUsers = localStorage.getItem('goldrush9ja_registered_users');
     let password = 'password123';
@@ -242,10 +282,14 @@ export default function App() {
   useEffect(() => {
     if (transactions.length > 0) {
       transactions.forEach((tx) => {
-        setDocumentData('transactions', tx.id, {
-          ...tx,
-          username: user?.username || 'system'
-        });
+        // Guard: Only sync to Firestore if this transaction was not already synced in this session
+        if (!syncedTransactionIdsRef.current.has(tx.id)) {
+          syncedTransactionIdsRef.current.add(tx.id);
+          setDocumentData('transactions', tx.id, {
+            ...tx,
+            username: user?.username || 'system'
+          });
+        }
       });
     }
   }, [transactions, user?.username]);
@@ -258,7 +302,11 @@ export default function App() {
         if (upgradesRaw) {
           const reqs = JSON.parse(upgradesRaw);
           reqs.forEach((r: any) => {
-            setDocumentData('upgrade_requests', r.id, r);
+            const key = `${r.id}_${r.status}`;
+            if (!syncedUpgradeRequestsRef.current.has(key)) {
+              syncedUpgradeRequestsRef.current.add(key);
+              setDocumentData('upgrade_requests', r.id, r);
+            }
           });
         }
 
@@ -266,7 +314,11 @@ export default function App() {
         if (bingsRaw) {
           const reqs = JSON.parse(bingsRaw);
           reqs.forEach((r: any) => {
-            setDocumentData('bing_purchase_requests', r.id, r);
+            const key = `${r.id}_${r.status}`;
+            if (!syncedPurchaseRequestsRef.current.has(key)) {
+              syncedPurchaseRequestsRef.current.add(key);
+              setDocumentData('bing_purchase_requests', r.id, r);
+            }
           });
         }
       } catch (e) {
@@ -275,7 +327,7 @@ export default function App() {
     };
 
     handleSyncRequests();
-  }, [activeTab]);
+  }, [upgradeRequests, purchaseRequests]);
 
   // Merge pending activations (upgrade & purchase requests) into user transaction history
   const displayedTransactions = useMemo(() => {
