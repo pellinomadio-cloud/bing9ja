@@ -526,7 +526,7 @@ export default function App() {
   };
 
   // Background passive income ticker
-  // Triggers every 3 seconds to increment unclaimed revenue for all online bings based on elapsed time
+  // Triggers every 200ms to increment unclaimed revenue for all online bings based on elapsed time
   useEffect(() => {
     if (!user || user.activeBings.length === 0) return;
 
@@ -565,7 +565,7 @@ export default function App() {
         }
         return prevUser;
       });
-    }, 3000);
+    }, 200);
 
     return () => clearInterval(interval);
   }, [user ? user.activeBings.length : 0]);
