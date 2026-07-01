@@ -20,6 +20,7 @@ import ExlPage from './components/ExlPage';
 import SupportPage from './components/SupportPage';
 import AdminPage from './components/AdminPage';
 import UpgradePaymentPage from './components/UpgradePaymentPage';
+import UpgradePage from './components/UpgradePage';
 import BingPurchasePaymentPage from './components/BingPurchasePaymentPage';
 import { BING_SERVICES } from './data';
 
@@ -525,7 +526,7 @@ export default function App() {
   };
 
   // Background passive income ticker
-  // Triggers every 3 seconds to increment unclaimed revenue for all online bings
+  // Triggers every 3 seconds to increment unclaimed revenue for all online bings based on elapsed time
   useEffect(() => {
     if (!user || user.activeBings.length === 0) return;
 
@@ -537,16 +538,20 @@ export default function App() {
         const updatedBings = prevUser.activeBings.map(bing => {
           if (bing.isCompleted) return bing;
           
-          // Yield speed is 1.5% of daily income per 3s tick
-          const increment = Math.round(bing.dailyIncome * 0.015);
-          const totalRemaining = bing.totalIncome - bing.totalClaimed;
-          const actualIncrement = Math.min(increment, totalRemaining - bing.accumulatedUnclaimed);
+          // Calculate exact accumulated value since lastClaimedTimestamp
+          const lastTime = new Date(bing.lastClaimedTimestamp).getTime();
+          const msPassed = Date.now() - lastTime;
+          const ratePerMs = bing.dailyIncome / (24 * 60 * 60 * 1000); // 86400000 ms in a day
+          const exactEarned = Math.floor(msPassed * ratePerMs);
           
-          if (actualIncrement > 0) {
+          const totalRemaining = bing.totalIncome - bing.totalClaimed;
+          const actualUnclaimed = Math.max(0, Math.min(exactEarned, totalRemaining));
+          
+          if (actualUnclaimed !== bing.accumulatedUnclaimed) {
             hasChanges = true;
             return {
               ...bing,
-              accumulatedUnclaimed: bing.accumulatedUnclaimed + actualIncrement
+              accumulatedUnclaimed: actualUnclaimed
             };
           }
           return bing;
@@ -575,12 +580,14 @@ export default function App() {
     if (!user || unclaimedEarnings <= 0) return;
 
     const newBalance = user.balance + unclaimedEarnings;
+    const nowISO = new Date().toISOString();
     const updatedBings = user.activeBings.map(b => {
       const claimedSum = b.totalClaimed + b.accumulatedUnclaimed;
       return {
         ...b,
         totalClaimed: claimedSum,
         accumulatedUnclaimed: 0,
+        lastClaimedTimestamp: nowISO,
         isCompleted: claimedSum >= b.totalIncome
       };
     });
@@ -613,6 +620,7 @@ export default function App() {
     const amountToClaim = targetBing.accumulatedUnclaimed;
 
     const newBalance = user.balance + amountToClaim;
+    const nowISO = new Date().toISOString();
     const updatedBings = user.activeBings.map(b => {
       if (b.id === activeBingId) {
         const totalClaimedSoFar = b.totalClaimed + amountToClaim;
@@ -620,6 +628,7 @@ export default function App() {
           ...b,
           totalClaimed: totalClaimedSoFar,
           accumulatedUnclaimed: 0,
+          lastClaimedTimestamp: nowISO,
           isCompleted: totalClaimedSoFar >= b.totalIncome
         };
       }
@@ -1018,14 +1027,6 @@ export default function App() {
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full border border-white/5">
               <span className="text-[10px] font-black uppercase text-purple-200">LVL {user.tier}</span>
-              {user.tier < 4 && (
-                <button 
-                  onClick={() => setActiveTab('me')}
-                  className="text-[9px] bg-primary-accent text-primary-medium font-black px-1.5 py-0.5 rounded-md hover:bg-white transition-colors uppercase cursor-pointer"
-                >
-                  Upgrade
-                </button>
-              )}
             </div>
             <div className="h-6 w-[1px] bg-white/15"></div>
             <div className="text-right">
@@ -1051,7 +1052,7 @@ export default function App() {
                 user={user} 
                 transactions={displayedTransactions} 
                 onNavigate={setActiveTab}
-                onOpenUpgradeModal={() => setActiveTab('me')}
+                onOpenUpgradeModal={() => setActiveTab('upgrade')}
                 onAddMoneySimulation={handleAddMoneySimulation}
                 onSimulateWithdrawal={handleSimulateWithdrawal}
                 onClaimAllEarnings={handleClaimAllEarnings}
@@ -1101,8 +1102,24 @@ export default function App() {
             >
               <UserProfileMe 
                 user={user} 
-                onUpgradeTier={handleUpgradeTier} 
+                onNavigate={setActiveTab}
                 onSignOut={handleSignOut}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'upgrade' && (
+            <motion.div 
+              key="upgrade" 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+            >
+              <UpgradePage 
+                user={user} 
+                onUpgradeTier={handleUpgradeTier} 
+                onBack={() => setActiveTab('home')}
               />
             </motion.div>
           )}
@@ -1134,7 +1151,7 @@ export default function App() {
                 user={user} 
                 onPurchase={handlePurchaseItem} 
                 onBack={() => setActiveTab('home')} 
-                onUpgradeRequest={() => { setActiveTab('home'); setShowUpgradeModal(true); }}
+                onUpgradeRequest={() => { setActiveTab('upgrade'); }}
               />
             </motion.div>
           )}
@@ -1151,7 +1168,7 @@ export default function App() {
                 user={user} 
                 onWithdraw={handleUserWithdrawal} 
                 onBack={() => setActiveTab('home')} 
-                onUpgradeRequest={() => { setActiveTab('home'); setShowUpgradeModal(true); }}
+                onUpgradeRequest={() => { setActiveTab('upgrade'); }}
               />
             </motion.div>
           )}
@@ -1168,7 +1185,7 @@ export default function App() {
                 user={user} 
                 onPurchase={handlePurchaseItem} 
                 onBack={() => setActiveTab('home')} 
-                onUpgradeRequest={() => { setActiveTab('home'); setShowUpgradeModal(true); }}
+                onUpgradeRequest={() => { setActiveTab('upgrade'); }}
               />
             </motion.div>
           )}

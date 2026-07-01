@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { 
   User as UserIcon, Mail, ShieldAlert, Award, Layers, Check, 
-  ChevronRight, Smartphone, KeyRound, ExternalLink, ShieldCheck
+  ChevronRight, Smartphone, KeyRound, ExternalLink, ShieldCheck, LogOut, Settings2
 } from 'lucide-react';
-import { User, TierLevel } from '../types';
+import { User } from '../types';
 import { TIERS, formatNaira } from '../data';
 
 interface UserProfileMeProps {
   user: User;
-  onUpgradeTier: (targetTier: TierLevel) => void;
   onSignOut: () => void;
+  onNavigate: (tab: string) => void;
 }
 
-export default function UserProfileMe({ user, onUpgradeTier, onSignOut }: UserProfileMeProps) {
+export default function UserProfileMe({ user, onSignOut, onNavigate }: UserProfileMeProps) {
   const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
 
   return (
-    <div className="space-y-6 pb-24 font-sans text-primary-dark">
+    <div className="space-y-6 pb-24 font-sans text-primary-dark max-w-lg mx-auto">
       {/* Profile Header */}
       <div className="bg-white p-6 rounded-3xl border border-purple-100/50 shadow-sm flex flex-col items-center text-center space-y-3" id="me-profile-card">
         <div className="relative">
@@ -72,84 +72,79 @@ export default function UserProfileMe({ user, onUpgradeTier, onSignOut }: UserPr
         </div>
       </div>
 
-      {/* Tiers Upgrade Board */}
-      <div className="bg-white p-5 rounded-3xl border border-purple-100/50 shadow-sm space-y-4" id="tiers-upgrade-board">
-        <h3 className="font-extrabold text-xs tracking-wider uppercase text-purple-400">Expand Your Tier Capacity</h3>
-        
-        <div className="space-y-4">
-          {TIERS.map((tier) => {
-            const isCurrent = user.tier === tier.level;
-            const isUnlocked = user.tier >= tier.level;
-            const canAfford = user.balance >= tier.cost;
+      {/* Structured Settings Section */}
+      <div className="bg-white p-5 rounded-3xl border border-purple-100/50 shadow-sm space-y-4" id="me-settings-board">
+        <div className="flex items-center gap-2 border-b border-purple-50 pb-3">
+          <Settings2 className="h-4 w-4 text-primary-brand" />
+          <h4 className="font-extrabold text-xs tracking-wider uppercase text-purple-400">System Preferences</h4>
+        </div>
 
-            return (
-              <div 
-                key={tier.level}
-                id={`tier-card-${tier.level}`}
-                className={`p-4.5 rounded-2xl border transition-all duration-300 relative ${
-                  isCurrent 
-                    ? 'border-primary-brand bg-primary-light/40 shadow-sm' 
-                    : isUnlocked 
-                      ? 'border-purple-100 bg-purple-50/30 opacity-75' 
-                      : 'border-purple-100 hover:border-purple-200 bg-white'
-                }`}
-              >
-                {isCurrent && (
-                  <span className="absolute top-4 right-4 text-[10px] font-extrabold text-white bg-primary-brand px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                    CURRENT ACTIVE
-                  </span>
-                )}
-
-                <h4 className="text-sm font-extrabold text-primary-dark">{tier.name}</h4>
-                <p className="text-xs text-purple-400 mt-0.5 font-mono">
-                  {tier.level === 1 ? 'Default starting account' : `Upgrade Fee: ${formatNaira(tier.cost)}`}
-                </p>
-
-                {/* Perks Checklist */}
-                <ul className="mt-3.5 space-y-1.5 text-xs font-semibold text-primary-dark/80">
-                  {tier.perks.map((p, pIdx) => (
-                    <li key={pIdx} className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-purple-100 text-primary-brand flex items-center justify-center flex-shrink-0">
-                        <Check size={10} className="stroke-[3]" />
-                      </div>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Upgrade Button */}
-                {!isUnlocked && (
-                  <button
-                    type="button"
-                    id={`upgrade-tier-btn-${tier.level}`}
-                    onClick={() => onUpgradeTier(tier.level)}
-                    className={`w-full mt-4 py-2.5 text-xs font-extrabold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                      canAfford
-                        ? 'bg-primary-dark hover:bg-primary-brand text-white active:scale-95'
-                        : 'bg-purple-100 text-purple-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>Upgrade to Tier {tier.level}</span>
-                    <ChevronRight size={14} />
-                  </button>
-                )}
+        <div className="space-y-2">
+          {/* Option: Upgrade Level */}
+          <button
+            onClick={() => onNavigate('upgrade')}
+            className="w-full flex items-center justify-between p-3.5 hover:bg-purple-50/50 rounded-2xl transition-all border border-transparent hover:border-purple-100 text-left cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 bg-purple-100 text-primary-brand rounded-xl flex items-center justify-center">
+                <Award size={18} />
               </div>
-            );
-          })}
+              <div>
+                <span className="text-xs font-bold block text-primary-dark">Upgrade Account Tier</span>
+                <span className="text-[10px] text-purple-400 font-semibold block mt-0.5">Increase daily transaction limits</span>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-purple-300 group-hover:text-primary-brand transition-colors" />
+          </button>
+
+          {/* Option: Transaction History */}
+          <button
+            onClick={() => onNavigate('transactions')}
+            className="w-full flex items-center justify-between p-3.5 hover:bg-purple-50/50 rounded-2xl transition-all border border-transparent hover:border-purple-100 text-left cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 bg-purple-100 text-primary-brand rounded-xl flex items-center justify-center">
+                <Layers size={18} />
+              </div>
+              <div>
+                <span className="text-xs font-bold block text-primary-dark">Transaction Logs</span>
+                <span className="text-[10px] text-purple-400 font-semibold block mt-0.5">View your direct deposits & withdraw records</span>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-purple-300 group-hover:text-primary-brand transition-colors" />
+          </button>
+
+          {/* Option: Referral Portal */}
+          <button
+            onClick={() => onNavigate('referrals')}
+            className="w-full flex items-center justify-between p-3.5 hover:bg-purple-50/50 rounded-2xl transition-all border border-transparent hover:border-purple-100 text-left cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 bg-purple-100 text-primary-brand rounded-xl flex items-center justify-center">
+                <Smartphone size={18} />
+              </div>
+              <div>
+                <span className="text-xs font-bold block text-primary-dark">Referral Affiliate Center</span>
+                <span className="text-[10px] text-purple-400 font-semibold block mt-0.5">Track your code and affiliate bonuses</span>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-purple-300 group-hover:text-primary-brand transition-colors" />
+          </button>
         </div>
       </div>
 
       {/* Session Security Sign Out */}
       <div className="bg-white p-5 rounded-3xl border border-red-100 shadow-sm space-y-3" id="profile-signout-box">
         <h4 className="font-extrabold text-xs tracking-wider uppercase text-red-600">Session Security</h4>
-        <p className="text-xs text-purple-400 font-medium">
-          Ready to end your session? Sign out securely. Your details and current balance are safely stored on CBN secured servers.
+        <p className="text-xs text-purple-400 font-semibold">
+          Ready to end your session? Sign out securely. Your details and current balance are safely stored on secured servers.
         </p>
         <button
           type="button"
           onClick={onSignOut}
-          className="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+          className="w-full py-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-xs font-extrabold rounded-2xl cursor-pointer transition-colors flex items-center justify-center gap-1.5 shadow-xs"
         >
+          <LogOut size={14} className="stroke-[3]" />
           <span>Sign Out of Account</span>
         </button>
       </div>

@@ -53,7 +53,6 @@ export default function DashboardHome({
   unclaimedEarnings
 }: DashboardHomeProps) {
   const [showBalance, setShowBalance] = useState(true);
-  const [filterType, setFilterType] = useState<'all' | 'inflow' | 'outflow'>('all');
   const [copied, setCopied] = useState(false);
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -119,18 +118,6 @@ export default function DashboardHome({
   const currentTierInfo = TIERS.find(t => t.level === user.tier) || TIERS[0];
   const limitPercent = Math.min((user.balance / currentTierInfo.limit) * 100, 100);
 
-  // Filter transactions
-  const filteredTx = transactions.filter(tx => {
-    if (filterType === 'all') return true;
-    if (filterType === 'inflow') {
-      return ['deposit', 'referral', 'earnings'].includes(tx.type);
-    }
-    if (filterType === 'outflow') {
-      return ['withdrawal', 'purchase', 'upgrade'].includes(tx.type);
-    }
-    return true;
-  });
-
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://goldrush9ja.online/join?ref=${user.username}`);
     setCopied(true);
@@ -143,35 +130,32 @@ export default function DashboardHome({
 
   return (
     <div className="space-y-4 pb-24 font-sans text-primary-dark">
-      {/* Live Withdrawal Ticker Toast */}
+      {/* Live Withdrawal Ticker Toast / Cashout Testimony */}
       <div className="relative z-20 overflow-hidden w-full max-w-md mx-auto" id="live-withdrawal-ticker-wrapper">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentWithdrawalIndex}
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            initial={{ opacity: 0, y: -15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 150, damping: 18 }}
-            className="bg-emerald-600/95 backdrop-blur-xs text-white rounded-2xl p-1.5 px-3.5 shadow-sm border border-emerald-500/10 flex items-center justify-between gap-2.5"
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="bg-neutral-900 text-white rounded-3xl p-3.5 px-5 shadow-lg shadow-emerald-950/20 border-2 border-emerald-500 flex items-center justify-between gap-3"
             id={`withdrawal-alert-${currentWithdrawalIndex}`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="relative flex h-2 w-2 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="relative flex h-3 w-3 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
-              <div className="min-w-0 leading-tight">
-                <p className="text-[11px] font-bold text-white tracking-tight truncate">
-                  <span className="font-extrabold text-amber-200">{liveWithdrawals[currentWithdrawalIndex].name}</span> withdrew{' '}
-                  <span className="font-extrabold text-amber-200">{formatNaira(liveWithdrawals[currentWithdrawalIndex].amount)}</span> to{' '}
-                  <span className="font-semibold text-emerald-100">{liveWithdrawals[currentWithdrawalIndex].bank}</span>
+              <div className="min-w-0 leading-relaxed">
+                <p className="text-xs font-semibold text-neutral-300 tracking-tight">
+                  <span className="font-extrabold text-white text-sm">{liveWithdrawals[currentWithdrawalIndex].name}</span>
+                  <span className="text-neutral-400 mx-1">withdrew</span>
+                  <span className="font-extrabold text-emerald-400 text-sm">{formatNaira(liveWithdrawals[currentWithdrawalIndex].amount)}</span>
+                  <span className="text-neutral-400 mx-1">to</span>
+                  <span className="font-bold text-white">{liveWithdrawals[currentWithdrawalIndex].bank}</span>
                 </p>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] bg-emerald-700/50 text-emerald-100 px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide">
-                just now
-              </span>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -358,7 +342,7 @@ export default function DashboardHome({
                 { id: 'data', label: 'Mobile Data', icon: TrendingUp, color: 'bg-purple-50 text-purple-600' },
                 { id: 'withdraw', label: 'Withdraw', icon: ArrowUpRight, color: 'bg-purple-50 text-purple-600' },
                 { id: 'exl', label: 'EXL', icon: Globe, color: 'bg-purple-50 text-purple-600' },
-                { id: 'me', label: 'Upgrade', icon: Award, color: 'bg-primary-accent text-primary-medium shadow-md shadow-primary-accent/30 font-extrabold animate-pulse' },
+                { id: 'upgrade', label: 'Upgrade', icon: Award, color: 'bg-primary-accent text-primary-medium shadow-md shadow-primary-accent/30 font-extrabold animate-pulse' },
                 { id: 'help', label: 'Support', icon: HelpCircle, color: 'bg-purple-50 text-purple-600' },
               ].map((srv) => {
                 const Icon = srv.icon;
@@ -373,17 +357,17 @@ export default function DashboardHome({
                       else if (srv.id === 'airtime' || srv.id === 'data') onNavigate('airtime-data');
                       else if (srv.id === 'withdraw') onNavigate('withdraw');
                       else if (srv.id === 'exl') onNavigate('exl');
-                      else if (srv.id === 'me') onNavigate('me');
+                      else if (srv.id === 'upgrade') onNavigate('upgrade');
                       else if (srv.id === 'help') onNavigate('support');
                     }}
                     className="flex flex-col items-center gap-1.5 group cursor-pointer"
                   >
                     <div className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${srv.color}`}>
-                      <Icon className="h-5.5 w-5.5" />
+                       <Icon className="h-5.5 w-5.5" />
                     </div>
                     <span className={`text-[10px] font-bold tracking-tight ${
                       srv.id === 'bingshop' ? 'text-amber-700 font-extrabold' : 
-                      srv.id === 'me' ? 'text-amber-600 font-extrabold animate-pulse' : 
+                      srv.id === 'upgrade' ? 'text-amber-600 font-extrabold animate-pulse' : 
                       'text-primary-dark/80'
                     }`}>
                       {srv.label}
@@ -396,82 +380,6 @@ export default function DashboardHome({
         </div>
 
       </div>
-
-      {/* Card 5: Recent Transactions Card (md:col-span-12) */}
-        <div className="md:col-span-12 bg-white p-5 rounded-3xl border border-primary-medium/10 shadow-sm" id="recent-transactions-box">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <History className="h-4 w-4 text-primary-brand" />
-              <h4 className="font-extrabold text-xs tracking-wider uppercase text-purple-400">Transactions</h4>
-            </div>
-            
-            {/* Quick Filters */}
-            <div className="flex bg-purple-50 p-0.5 rounded-xl border border-purple-100">
-              {(['all', 'inflow', 'outflow'] as const).map(f => (
-                <button
-                  key={f}
-                  type="button"
-                  id={`filter-tx-${f}`}
-                  onClick={() => setFilterType(f)}
-                  className={`text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider transition-all duration-200 ${
-                    filterType === f 
-                      ? 'bg-white text-primary-brand shadow-sm' 
-                      : 'text-purple-400 hover:text-primary-brand'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Transaction list layout */}
-          <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-            <AnimatePresence initial={false}>
-              {filteredTx.length === 0 ? (
-                <div className="text-center py-8 text-purple-300 text-xs font-semibold">
-                  No transactions found under this filter.
-                </div>
-              ) : (
-                filteredTx.map(tx => {
-                  const isInflow = ['deposit', 'referral', 'earnings'].includes(tx.type);
-                  return (
-                    <motion.div
-                      key={tx.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      className="flex justify-between items-center p-3 bg-purple-50/20 hover:bg-purple-50/50 border border-purple-100/30 rounded-2xl transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                          isInflow ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                        }`}>
-                          {isInflow ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
-                        </div>
-                        <div>
-                          <h5 className="font-bold text-xs text-primary-dark">{tx.description}</h5>
-                          <p className="text-[10px] text-purple-400/80 font-mono mt-0.5">{tx.reference} • {tx.timestamp}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className={`text-xs font-extrabold tracking-tight ${
-                          isInflow ? 'text-emerald-600' : 'text-rose-600'
-                        }`}>
-                          {isInflow ? '+' : '-'}{formatNaira(tx.amount)}
-                        </span>
-                        <div className="flex items-center justify-end gap-1 text-[10px] text-purple-400 mt-0.5">
-                          <CheckCircle size={10} className="text-emerald-500" />
-                          <span className="font-bold capitalize">{tx.status}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
 
       {/* Promos & Security (Side-by-side grids) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

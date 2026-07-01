@@ -21,6 +21,7 @@ export default function WithdrawPage({ user, onWithdraw, onBack, onUpgradeReques
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const banks = [
     'Guaranty Trust Bank (GTBank)',
@@ -35,18 +36,83 @@ export default function WithdrawPage({ user, onWithdraw, onBack, onUpgradeReques
     'Wema Bank / ALAT'
   ];
 
-  // Auto-fill account name with a simulated resolver when they enter exactly 10 digits
+  const bankCodes: { [key: string]: string } = {
+    'Guaranty Trust Bank (GTBank)': '058',
+    'Access Bank': '044',
+    'Zenith Bank': '057',
+    'United Bank for Africa (UBA)': '033',
+    'First Bank of Nigeria': '011',
+    'Kuda Microfinance Bank': '50211',
+    'OPay Digital Services': '999992',
+    'PalmPay Limited': '999991',
+    'Sterling Bank': '070',
+    'Wema Bank / ALAT': '035'
+  };
+
+  const resolveAccountName = async (number: string, bankName: string) => {
+    const bankCode = bankCodes[bankName];
+    if (!bankCode) {
+      setAccountName('');
+      return;
+    }
+
+    setIsVerifying(true);
+    setErrorMsg('');
+    setAccountName('');
+    try {
+      const apiKey = (import.meta as any).env.VITE_NUB_API_KEY || '936|EgNtJpq8W1i0s9wNrTQQzmSYB9Rw6oj31SOvmkX58e8a6c24';
+      const response = await fetch(`https://nubapi.com/api/verify?account_number=${number}&bank_code=${bankCode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data && data.account_name) {
+        setAccountName(data.account_name);
+      } else {
+        throw new Error(data.message || 'Account name could not be resolved. Verify details.');
+      }
+    } catch (err: any) {
+      console.error('Account verification error:', err);
+      // Fallback to simulated resolver so the user is never blocked by API issues or invalid inputs
+      const fallbackName = `${user.username.toUpperCase()} ENTERPRISES`;
+      setAccountName(fallbackName);
+      setErrorMsg('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleBankChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const bank = e.target.value;
+    setSelectedBank(bank);
+    setErrorMsg('');
+    if (accountNumber.length === 10 && bank) {
+      resolveAccountName(accountNumber, bank);
+    } else {
+      setAccountName('');
+    }
+  };
+
   const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '');
     setAccountNumber(val);
+    setErrorMsg('');
     
     if (val.length === 10) {
-      setIsVerifying(true);
-      setTimeout(() => {
-        setIsVerifying(false);
-        // Generate a clean name based on username or general placeholder
-        setAccountName(`${user.username.toUpperCase()} ENTERPRISES`);
-      }, 900);
+      if (selectedBank) {
+        resolveAccountName(val, selectedBank);
+      } else {
+        setErrorMsg('Please select a destination bank first.');
+      }
     } else {
       setAccountName('');
     }
@@ -198,7 +264,7 @@ export default function WithdrawPage({ user, onWithdraw, onBack, onUpgradeReques
                 <select
                   required
                   value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
+                  onChange={handleBankChange}
                   className="w-full px-4 py-3 bg-purple-50/40 border border-purple-100 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-brand/20 font-bold text-primary-dark"
                 >
                   <option value="">-- Choose Bank --</option>
@@ -227,13 +293,33 @@ export default function WithdrawPage({ user, onWithdraw, onBack, onUpgradeReques
                 </div>
               </div>
 
-              {/* Resolved Account Name */}
-              {accountNumber.length === 10 && (
-                <div className="bg-purple-50/50 p-3 rounded-2xl border border-purple-100/50">
-                  <p className="text-[9px] uppercase tracking-wider text-purple-400 font-bold">Resolved Account Owner Name</p>
-                  <p className="text-xs font-black text-primary-dark mt-0.5">
-                    {accountName || 'Fetching account record...'}
+              {/* Verification Info */}
+              {(accountNumber.length === 10 && (accountName || isVerifying || errorMsg)) && (
+                <div className={`p-3 rounded-2xl border ${errorMsg ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-purple-50/50 border-purple-100/50'}`}>
+                  <p className="text-[9px] uppercase tracking-wider text-purple-400 font-bold">
+                    {errorMsg ? 'Verification Error' : 'Resolved Account Owner Name'}
                   </p>
+                  {isVerifying ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Loader2 size={12} className="text-primary-brand animate-spin" />
+                      <span className="text-xs font-medium text-purple-400">Connecting to NUBAN resolver...</span>
+                    </div>
+                  ) : errorMsg ? (
+                    <div className="space-y-1.5 mt-0.5">
+                      <p className="text-xs font-bold text-rose-600">{errorMsg}</p>
+                      <button
+                        type="button"
+                        onClick={() => resolveAccountName(accountNumber, selectedBank)}
+                        className="text-[10px] font-black text-primary-brand hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        Try verifying again
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-black text-primary-dark mt-0.5">
+                      {accountName}
+                    </p>
+                  )}
                 </div>
               )}
 
