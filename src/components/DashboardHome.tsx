@@ -218,35 +218,6 @@ export default function DashboardHome({
         </div>
       </div>
 
-      {/* Live Earnings Ticker Banner if user has running bings */}
-      {user.activeBings.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-r from-amber-500 to-primary-brand text-white p-2.5 px-4 rounded-2xl shadow-sm border border-amber-400/20 flex items-center justify-between gap-3 text-xs"
-          id="live-earnings-banner"
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-            </span>
-            <div className="truncate font-semibold text-[11px] text-amber-50">
-              Unclaimed Node Revenue: <span className="font-black text-white text-xs">{formatNaira(unclaimedEarnings)}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            id="claim-earnings-btn"
-            disabled={unclaimedEarnings <= 0}
-            onClick={onClaimAllEarnings}
-            className="px-3 py-1.5 bg-white text-amber-700 hover:bg-amber-50 disabled:opacity-50 disabled:pointer-events-none font-black text-[10px] rounded-lg shadow-xs transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1 shrink-0"
-          >
-            <TrendingUp size={11} className="stroke-[3]" />
-            <span>Claim</span>
-          </button>
-        </motion.div>
-      )}
 
       {/* Bento Grid Layout Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
