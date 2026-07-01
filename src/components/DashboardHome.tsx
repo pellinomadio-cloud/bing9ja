@@ -131,15 +131,15 @@ export default function DashboardHome({
   return (
     <div className="space-y-4 pb-24 font-sans text-primary-dark">
       {/* Live Withdrawal Ticker Toast / Cashout Testimony */}
-      <div className="relative z-20 overflow-hidden w-full max-w-md mx-auto" id="live-withdrawal-ticker-wrapper">
+      <div className="relative z-20 overflow-hidden w-full max-w-md mx-auto h-[62px] flex items-center justify-center" id="live-withdrawal-ticker-wrapper">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentWithdrawalIndex}
-            initial={{ opacity: 0, y: -15, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="bg-neutral-900 text-white rounded-3xl p-3.5 px-5 shadow-lg shadow-emerald-950/20 border-2 border-emerald-500 flex items-center justify-between gap-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="w-full bg-neutral-900 text-white rounded-3xl p-3 px-5 shadow-lg shadow-emerald-950/20 border-2 border-emerald-500 flex items-center justify-between gap-3"
             id={`withdrawal-alert-${currentWithdrawalIndex}`}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -253,78 +253,118 @@ export default function DashboardHome({
         
         {/* Card 1: Balance Card (lg:col-span-6) */}
         <div 
-          className="lg:col-span-6 bg-primary-medium rounded-3xl p-5 text-white flex flex-col justify-between shadow-xl relative overflow-hidden min-h-[230px]"
+          className="lg:col-span-6 bg-gradient-to-br from-neutral-900 via-neutral-950 to-purple-950 rounded-3xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden min-h-[235px] border border-amber-500/25"
           id="balance-card"
         >
-          <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+          {/* Decorative luxury mesh background elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          {/* Card header layout: chip and security status */}
           <div className="z-10 flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-1.5">
-                  <Wallet size={15} className="text-purple-300" />
-                  <p className="text-[11px] opacity-70 font-semibold tracking-wider uppercase">Total Available Balance</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-9 rounded bg-gradient-to-r from-amber-400 to-amber-600 p-[1px] relative overflow-hidden opacity-90 shadow-inner flex flex-col justify-between py-1 px-1.5">
+                    <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                      <div className="border border-amber-950/30 rounded-[1px]"></div>
+                      <div className="border border-amber-950/30 rounded-[1px]"></div>
+                      <div className="border border-amber-950/30 rounded-[1px]"></div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-mono tracking-widest uppercase font-bold">PRESTIGE SYSTEM WALLET</span>
+                </div>
+                
+                {/* Available Balance Title & Toggle */}
+                <div className="flex items-center gap-2 mt-4 text-neutral-400">
+                  <span className="text-[11px] font-bold tracking-wider uppercase">AVAILABLE BALANCE</span>
                   <button 
                     type="button" 
                     onClick={() => setShowBalance(!showBalance)} 
-                    className="p-1 hover:bg-white/10 rounded transition-colors text-purple-200"
+                    className="p-1 hover:bg-white/10 rounded-lg transition-colors text-amber-400 cursor-pointer"
                   >
                     {showBalance ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
                 </div>
+
+                {/* Balance display */}
+                <h2 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight flex items-center">
+                  {showBalance ? (
+                    <>
+                      <span className="text-amber-400 mr-1.5 font-extrabold font-sans">₦</span>
+                      <span className="text-white font-mono">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </>
+                  ) : (
+                    <span className="text-amber-400 tracking-wider font-mono">₦ ••••••••</span>
+                  )}
+                </h2>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black mt-2 tracking-tight">
-                {showBalance ? formatNaira(user.balance) : '₦ ••••••••'}
-              </h2>
+
+              {/* Secure Shield Badge */}
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full text-emerald-400">
+                  <Shield size={10} className="stroke-[3]" />
+                  <span className="text-[9px] font-black uppercase tracking-wider">SECURE</span>
+                </div>
+                <span className="text-[8px] text-neutral-500 font-mono">SSL 256-BIT</span>
+              </div>
             </div>
 
-            {/* Progress status */}
-            <div className="bg-black/20 rounded-2xl p-3 mt-3">
-              <div className="flex justify-between items-center text-[9px]">
-                <span className="uppercase tracking-wider opacity-60 font-bold">Wallet Storage Capacity</span>
-                <span className="font-extrabold text-amber-300">UNLIMITED</span>
+            {/* Wallet Storage status */}
+            <div className="bg-white/[0.04] backdrop-blur-md border border-white/5 rounded-2xl p-3.5 mt-4">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="uppercase tracking-widest text-neutral-400 font-bold">SYSTEM NETWORK COVERAGE</span>
+                <span className="font-extrabold text-amber-400 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  CONNECTED
+                </span>
               </div>
-              <p className="text-[8px] mt-1 opacity-60">
-                {user.tier < 2 ? '⚠️ Upgrade to Tier 2 to enable Commercial Bank Cashout' : '✅ Tier 2 Secured: Bank withdrawals active'}
+              <p className="text-[9px] mt-1.5 font-semibold text-neutral-300">
+                {user.tier < 2 ? (
+                  <span className="text-amber-400/95">⚠️ Level {user.tier} Account: Upgrade to Level 2 to enable High-Limit Commercial Bank Cashout</span>
+                ) : (
+                  <span className="text-emerald-400">✅ Level {user.tier} Secured: High-Limit Direct-To-Bank Cashouts Active</span>
+                )}
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 mt-3.5 z-10">
+          <div className="flex gap-2.5 mt-4.5 z-10">
             <button
               type="button"
               id="add-money-btn"
               onClick={() => onNavigate('transactions')}
-              className="flex-1 bg-white text-primary-dark hover:bg-purple-50 transition-all font-bold text-[11px] py-2.5 rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 cursor-pointer"
+              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 hover:from-amber-400 hover:to-amber-500 transition-all font-black text-[10px] tracking-wider uppercase py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/10 active:scale-95 cursor-pointer"
             >
               <History size={13} className="stroke-[3]" />
-              <span>Transaction History</span>
+              <span>History</span>
             </button>
             <button
               type="button"
               id="withdraw-btn"
               onClick={() => onNavigate('withdraw')}
-              className="flex-1 bg-purple-950/40 backdrop-blur-md text-white border border-white/20 hover:bg-white/10 transition-all font-bold text-[11px] py-2.5 rounded-xl flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
+              className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all font-black text-[10px] tracking-wider uppercase py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <ArrowUpRight size={13} className="stroke-[3]" />
-              <span>Withdraw</span>
+              <span>Withdraw Fund</span>
             </button>
           </div>
 
           {/* Active Nodes Indicator */}
           <div 
-            className="mt-3.5 pt-3 border-t border-white/10 flex justify-between items-center text-[11px] opacity-90 hover:opacity-100 transition-opacity cursor-pointer z-10"
+            className="mt-4 pt-3.5 border-t border-white/10 flex justify-between items-center text-[11px] opacity-90 hover:opacity-100 transition-opacity cursor-pointer z-10"
             onClick={() => onNavigate('bingshop')}
           >
-            <div className="flex items-center gap-1.5 text-purple-200">
-              <Flame className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
-              <span className="font-semibold">
-                Active: {user.activeBings.filter(b => !b.isCompleted).length} Nodes Running
+            <div className="flex items-center gap-1.5 text-neutral-300">
+              <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span className="font-bold text-xs">
+                Active Nodes: <span className="text-white font-mono">{user.activeBings.filter(b => !b.isCompleted).length}</span> Online
               </span>
             </div>
-            <div className="flex items-center gap-0.5 text-white font-bold">
-              <span>Invest</span>
-              <ChevronRight size={12} />
+            <div className="flex items-center gap-0.5 text-amber-400 font-extrabold text-[11px] uppercase tracking-wider">
+              <span>View Nodes</span>
+              <ChevronRight size={12} className="stroke-[3]" />
             </div>
           </div>
         </div>
