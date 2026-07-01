@@ -540,7 +540,8 @@ export default function App() {
           
           // Calculate exact accumulated value since lastClaimedTimestamp
           const lastTime = new Date(bing.lastClaimedTimestamp).getTime();
-          const msPassed = Date.now() - lastTime;
+          // Speed up time by 288x (so 1 day of earnings is fully generated in exactly 5 minutes of real time!)
+          const msPassed = (Date.now() - lastTime) * 288;
           const ratePerMs = bing.dailyIncome / (24 * 60 * 60 * 1000); // 86400000 ms in a day
           const exactEarned = Math.floor(msPassed * ratePerMs);
           
