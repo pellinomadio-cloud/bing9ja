@@ -223,27 +223,27 @@ export default function DashboardHome({
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-r from-amber-500 via-amber-600 to-primary-brand text-white p-4 rounded-3xl shadow-md border border-amber-400/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+          className="bg-gradient-to-r from-amber-500 to-primary-brand text-white p-2.5 px-4 rounded-2xl shadow-sm border border-amber-400/20 flex items-center justify-between gap-3 text-xs"
           id="live-earnings-banner"
         >
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-white animate-ping"></span>
-              <h4 className="font-extrabold text-xs tracking-wider uppercase">Live Node Revenue System</h4>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <div className="truncate font-semibold text-[11px] text-amber-50">
+              Unclaimed Node Revenue: <span className="font-black text-white text-xs">{formatNaira(unclaimedEarnings)}</span>
             </div>
-            <p className="text-sm font-semibold mt-1">
-              Unclaimed: <span className="font-extrabold text-lg">{formatNaira(unclaimedEarnings)}</span>
-            </p>
           </div>
           <button
             type="button"
             id="claim-earnings-btn"
             disabled={unclaimedEarnings <= 0}
             onClick={onClaimAllEarnings}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white text-amber-700 hover:bg-amber-50 disabled:opacity-50 disabled:pointer-events-none font-bold text-xs rounded-xl shadow-sm transition-all duration-300 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="px-3 py-1.5 bg-white text-amber-700 hover:bg-amber-50 disabled:opacity-50 disabled:pointer-events-none font-black text-[10px] rounded-lg shadow-xs transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1 shrink-0"
           >
-            <TrendingUp size={14} className="stroke-[3]" />
-            <span>Claim & Balance Credit</span>
+            <TrendingUp size={11} className="stroke-[3]" />
+            <span>Claim</span>
           </button>
         </motion.div>
       )}
