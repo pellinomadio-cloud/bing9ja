@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Eye, EyeOff, Plus, ArrowUpRight, ArrowDownLeft, Shield, 
   ChevronRight, Bell, Smartphone, HelpCircle, Award, 
-  Layers, Gift, Wallet, TrendingUp, History, CheckCircle, Flame, Copy, Globe, XCircle
+  Layers, Gift, Wallet, TrendingUp, History, CheckCircle, Flame, Copy, Globe, XCircle,
+  Headphones, Send
 } from 'lucide-react';
 import { User, Transaction, TierLevel } from '../types';
 import { formatNaira, TIERS, BING_SERVICES } from '../data';
@@ -40,6 +41,8 @@ interface DashboardHomeProps {
   onSimulateWithdrawal: () => void;
   onClaimAllEarnings: () => void;
   unclaimedEarnings: number;
+  isAppInstallable?: boolean;
+  onTriggerAppInstall?: () => void;
 }
 
 export default function DashboardHome({
@@ -50,10 +53,13 @@ export default function DashboardHome({
   onAddMoneySimulation,
   onSimulateWithdrawal,
   onClaimAllEarnings,
-  unclaimedEarnings
+  unclaimedEarnings,
+  isAppInstallable = false,
+  onTriggerAppInstall
 }: DashboardHomeProps) {
   const [showBalance, setShowBalance] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
@@ -119,7 +125,7 @@ export default function DashboardHome({
   const limitPercent = Math.min((user.balance / currentTierInfo.limit) * 100, 100);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://goldrush9ja.online/join?ref=${user.username}`);
+    navigator.clipboard.writeText(`https://volerapay.online/join?ref=${user.username}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -162,178 +168,267 @@ export default function DashboardHome({
       </div>
 
       {/* Top Welcome Bar */}
-      <div className="relative flex justify-between items-center bg-white p-4 rounded-3xl border border-primary-medium/10 shadow-sm" id="top-welcome-bar">
+      <div className="relative flex justify-between items-center py-2 px-1" id="top-welcome-bar">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-primary-medium to-primary-brand flex items-center justify-center text-white font-bold text-lg shadow-inner">
-              {user.username.substring(0, 2).toUpperCase()}
-            </div>
-            {/* Medal badge based on tier */}
-            <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full shadow border border-purple-100">
-              <Award className={`h-5 w-5 ${
-                user.tier === 1 ? 'text-[#8B4513]' :
-                user.tier === 2 ? 'text-[#D4AF37]' :
-                user.tier === 3 ? 'text-indigo-400' :
-                'text-fuchsia-600 animate-bounce'
-              }`} />
-            </div>
+          <div className="relative cursor-pointer" onClick={() => onNavigate('me')}>
+            <img 
+              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${user.username}`} 
+              alt="User Avatar"
+              className="h-11 w-11 rounded-full bg-amber-100 border border-neutral-200/50 object-cover shadow-sm"
+              referrerPolicy="no-referrer"
+            />
+            {/* Minimal Tier Indicator Badge */}
+            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-neutral-950 border border-white">
+              {user.tier}
+            </span>
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="font-bold text-base tracking-tight">Hi, {user.username.toUpperCase()}</h3>
-              <span className={`absolute -top-2.5 right-6 text-[9px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider shadow-sm border ${
-                user.tier === 1 ? 'bg-[#8B4513] text-[#FFF8F3] border-[#70350B]' :
-                user.tier === 2 ? 'bg-[#D4AF37] text-amber-950 border-[#BFA12C]' :
-                user.tier === 3 ? 'bg-purple-600 text-white border-purple-700' :
-                'bg-black text-amber-400 border border-amber-500'
-              }`}>
-                Lvl {user.tier}
-              </span>
-            </div>
-            <p className="text-xs text-purple-400 font-medium">Safe & Premium Banking</p>
+            <p className="text-neutral-500 text-xs font-semibold leading-none">Hello,</p>
+            <h3 className="font-bold text-base text-neutral-800 tracking-tight leading-tight mt-1">
+              {user.username.toLowerCase()}
+            </h3>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          {/* Help Headphones Button with Custom Badge */}
           <button 
             type="button"
-            className="p-2.5 bg-primary-light rounded-xl hover:bg-purple-100 transition-colors relative cursor-pointer"
-            onClick={handleOpenNotifications}
-            title="Corporate Announcements"
+            className="h-10 w-10 rounded-full bg-white shadow-xs border border-neutral-100 flex items-center justify-center relative cursor-pointer hover:bg-neutral-50 transition-colors"
+            onClick={() => onNavigate('support')}
+            title="Help Support Desk"
           >
-            <Bell className="h-5 w-5 text-primary-brand" />
+            <Headphones className="h-5 w-5 text-neutral-800" />
+            <span className="absolute -top-2 bg-[#E0533C] text-white text-[7px] font-black px-1.5 py-0.5 rounded-full tracking-wider shadow-xs scale-90">
+              HELP
+            </span>
+          </button>
+
+          {/* Notifications Bell Button */}
+          <button 
+            type="button"
+            className="h-10 w-10 rounded-full bg-white shadow-xs border border-neutral-100 flex items-center justify-center relative cursor-pointer hover:bg-neutral-50 transition-colors"
+            onClick={handleOpenNotifications}
+            title="Announcements"
+          >
+            <Bell className="h-5 w-5 text-neutral-800" />
             {unreadMessagesCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4.5 w-4.5 rounded-full bg-rose-500 text-white font-extrabold text-[9px] flex items-center justify-center animate-bounce shadow">
-                {unreadMessagesCount}
-              </span>
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#E0533C] ring-2 ring-white"></span>
             )}
           </button>
-          <button 
-            type="button"
-            className="p-2.5 bg-primary-light rounded-xl hover:bg-purple-100 transition-colors cursor-pointer"
-            onClick={() => onNavigate('me')}
-          >
-            <Layers className="h-5 w-5 text-primary-brand" />
-          </button>
         </div>
+      </div>
+
+
+      {/* Premium Green & Gold PWA App Installer Banner */}
+      <div className="bg-gradient-to-r from-[#0d2a1d] to-[#14422b] border border-[#d4af37]/30 rounded-[32px] p-5 text-white shadow-xl relative overflow-hidden" id="pwa-install-banner">
+        {/* Abstract Gold Circles in background */}
+        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-[#d4af37]/5 rounded-full blur-xl pointer-events-none"></div>
+        <div className="absolute left-1/3 top-2 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row w-full sm:w-auto">
+            <div className="relative shrink-0 p-1.5 bg-gradient-to-br from-[#d4af37] to-[#f3e5ab] rounded-2xl shadow-md shadow-[#d4af37]/10 flex-shrink-0 mx-auto sm:mx-0">
+              <img 
+                src="/volerapay_icon.jpg" 
+                alt="Volerapay Gold Icon" 
+                className="h-12 w-12 rounded-xl object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <div>
+              <div className="flex justify-center sm:justify-start">
+                <span className="inline-flex items-center gap-1 bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#f3e5ab] text-[9px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full mb-1">
+                  <Smartphone size={10} className="stroke-[3]" /> OFFICIAL MOBILE APP
+                </span>
+              </div>
+              <h4 className="text-base sm:text-lg font-black text-[#f3e5ab] tracking-tight leading-snug">
+                Install Volerapay on Android
+              </h4>
+              <p className="text-xs text-neutral-300 font-medium">
+                Claim real-time node yields & secure transfers directly from your phone's screen.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-center sm:justify-end">
+            {isAppInstallable ? (
+              <button
+                type="button"
+                onClick={onTriggerAppInstall}
+                className="w-full sm:w-auto bg-gradient-to-r from-[#d4af37] to-[#b3922e] hover:from-[#e5c14d] hover:to-[#c6a236] text-[#0d2a1d] font-extrabold text-xs px-5 py-2.5 rounded-2xl shadow-lg shadow-black/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-[#f3e5ab]/30"
+              >
+                <span>Install Now</span>
+                <ChevronRight size={14} className="stroke-[3]" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowInstallInstructions(!showInstallInstructions)}
+                className="w-full sm:w-auto bg-[#1c4d36] hover:bg-[#256648] text-[#f3e5ab] border border-[#d4af37]/40 font-extrabold text-xs px-5 py-2.5 rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>{showInstallInstructions ? "Hide Guide" : "Install Guide"}</span>
+                <HelpCircle size={14} className="stroke-[2.5]" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Step-by-Step Instructions Collapsible Toggle */}
+        <AnimatePresence>
+          {showInstallInstructions && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-emerald-500/20 text-xs text-neutral-200 space-y-3 leading-relaxed">
+                <p className="font-bold text-[#f3e5ab] flex items-center gap-1">
+                  💡 Easy Android installation using your mobile browser:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+                  <div className="bg-[#113a26] p-3 rounded-xl border border-emerald-500/10">
+                    <span className="font-black text-[#d4af37] mr-1">1.</span> Tap the <span className="font-extrabold text-[#f3e5ab]">Menu button (three dots)</span> at the top-right corner of Google Chrome.
+                  </div>
+                  <div className="bg-[#113a26] p-3 rounded-xl border border-emerald-500/10">
+                    <span className="font-black text-[#d4af37] mr-1">2.</span> Select <span className="font-extrabold text-[#f3e5ab]">"Install app"</span> or <span className="font-extrabold text-[#f3e5ab]">"Add to Home screen"</span>.
+                  </div>
+                  <div className="bg-[#113a26] p-3 rounded-xl border border-emerald-500/10">
+                    <span className="font-black text-[#d4af37] mr-1">3.</span> Confirm the prompt. The app icon will appear on your device desktop instantly!
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
 
       {/* Bento Grid Layout Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        {/* Card 1: Balance Card (lg:col-span-6) */}
+        {/* Card 1: Balance Card (Redesigned to match the uploaded image) */}
         <div 
-          className="lg:col-span-6 bg-gradient-to-br from-neutral-900 via-neutral-950 to-purple-950 rounded-3xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden min-h-[235px] border border-amber-500/25"
+          className="lg:col-span-12 bg-[#121315] rounded-[32px] p-6 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[230px] border border-neutral-800"
           id="balance-card"
         >
-          {/* Decorative luxury mesh background elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
-          {/* Card header layout: chip and security status */}
-          <div className="z-10 flex-1 flex flex-col justify-between">
-            <div className="flex justify-between items-start">
+          {/* Card Header: Wallet Balance title on left, Add Money button on right */}
+          <div className="z-10 flex flex-col justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-9 rounded bg-gradient-to-r from-amber-400 to-amber-600 p-[1px] relative overflow-hidden opacity-90 shadow-inner flex flex-col justify-between py-1 px-1.5">
-                    <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
-                      <div className="border border-amber-950/30 rounded-[1px]"></div>
-                      <div className="border border-amber-950/30 rounded-[1px]"></div>
-                      <div className="border border-amber-950/30 rounded-[1px]"></div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-amber-400 font-mono tracking-widest uppercase font-bold">PRESTIGE SYSTEM WALLET</span>
-                </div>
-                
-                {/* Available Balance Title & Toggle */}
-                <div className="flex items-center gap-2 mt-4 text-neutral-400">
-                  <span className="text-[11px] font-bold tracking-wider uppercase">AVAILABLE BALANCE</span>
+                <div className="flex items-center gap-2 text-[#8E9094]">
+                  <span className="text-xs font-bold tracking-wider uppercase">Wallet Balance</span>
                   <button 
                     type="button" 
                     onClick={() => setShowBalance(!showBalance)} 
-                    className="p-1 hover:bg-white/10 rounded-lg transition-colors text-amber-400 cursor-pointer"
+                    className="p-1 hover:bg-white/10 rounded-lg transition-colors text-[#8E9094] hover:text-white cursor-pointer"
                   >
-                    {showBalance ? <Eye size={14} /> : <EyeOff size={14} />}
+                    {showBalance ? <Eye size={15} /> : <EyeOff size={15} />}
                   </button>
                 </div>
-
+                
                 {/* Balance display */}
-                <h2 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight flex items-center">
+                <h2 className="text-3xl sm:text-4xl font-black mt-2 tracking-tight flex items-center">
                   {showBalance ? (
                     <>
-                      <span className="text-amber-400 mr-1.5 font-extrabold font-sans">₦</span>
+                      <span className="text-[#8E9094] mr-1.5 font-extrabold font-sans">₦</span>
                       <span className="text-white font-mono">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </>
                   ) : (
-                    <span className="text-amber-400 tracking-wider font-mono">₦ ••••••••</span>
+                    <span className="text-[#8E9094] tracking-wider font-mono">₦ ••••••••</span>
                   )}
                 </h2>
               </div>
 
-              {/* Secure Shield Badge */}
-              <div className="flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full text-emerald-400">
-                  <Shield size={10} className="stroke-[3]" />
-                  <span className="text-[9px] font-black uppercase tracking-wider">SECURE</span>
-                </div>
-                <span className="text-[8px] text-neutral-500 font-mono">SSL 256-BIT</span>
-              </div>
-            </div>
-
-            {/* Wallet Storage status */}
-            <div className="bg-white/[0.04] backdrop-blur-md border border-white/5 rounded-2xl p-3.5 mt-4">
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="uppercase tracking-widest text-neutral-400 font-bold">SYSTEM NETWORK COVERAGE</span>
-                <span className="font-extrabold text-amber-400 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  CONNECTED
-                </span>
-              </div>
-              <p className="text-[9px] mt-1.5 font-semibold text-neutral-300">
-                {user.tier < 2 ? (
-                  <span className="text-amber-400/95">⚠️ Level {user.tier} Account: Upgrade to Level 2 to enable High-Limit Commercial Bank Cashout</span>
-                ) : (
-                  <span className="text-emerald-400">✅ Level {user.tier} Secured: High-Limit Direct-To-Bank Cashouts Active</span>
-                )}
-              </p>
+              {/* Add Money Button (Top-Right of card, styled exactly like the uploaded image) */}
+              <button
+                type="button"
+                id="add-money-btn"
+                onClick={onAddMoneySimulation}
+                className="bg-[#1E1F22] hover:bg-[#2B2D31] text-white border-2 border-[#E0533C] transition-all font-extrabold text-xs py-2 px-5 rounded-full shadow-lg shadow-black/30 active:scale-95 cursor-pointer shrink-0"
+              >
+                Add Money
+              </button>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2.5 mt-4.5 z-10">
-            <button
-              type="button"
-              id="add-money-btn"
-              onClick={() => onNavigate('transactions')}
-              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 hover:from-amber-400 hover:to-amber-500 transition-all font-black text-[10px] tracking-wider uppercase py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/10 active:scale-95 cursor-pointer"
-            >
-              <History size={13} className="stroke-[3]" />
-              <span>History</span>
-            </button>
+          {/* Quick Actions Panel (Translucent Horizontal Button Area matching the image design) */}
+          <div className="bg-[#1C1D21]/90 border border-white/[0.03] rounded-2xl p-4 mt-6 z-10 grid grid-cols-4 gap-2 text-center shadow-inner">
+            {/* Action 1: Withdraw Fund (matches 'Send') */}
             <button
               type="button"
               id="withdraw-btn"
               onClick={() => onNavigate('withdraw')}
-              className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all font-black text-[10px] tracking-wider uppercase py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
             >
-              <ArrowUpRight size={13} className="stroke-[3]" />
-              <span>Withdraw Fund</span>
+              <div className="h-12 w-12 rounded-full bg-[#2B2D31] hover:bg-[#35373C] transition-all flex items-center justify-center text-white shadow-sm group-hover:scale-105">
+                <Send size={18} className="stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] font-bold text-neutral-300 group-hover:text-white transition-colors truncate w-full">
+                Withdraw Fund
+              </span>
+            </button>
+
+            {/* Action 2: Mobile Data (matches 'Data') */}
+            <button
+              type="button"
+              id="service-data"
+              onClick={() => onNavigate('airtime-data')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="h-12 w-12 rounded-full bg-[#2B2D31] hover:bg-[#35373C] transition-all flex items-center justify-center text-white shadow-sm group-hover:scale-105">
+                <TrendingUp size={18} className="stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] font-bold text-neutral-300 group-hover:text-white transition-colors truncate w-full">
+                Mobile Data
+              </span>
+            </button>
+
+            {/* Action 3: Airtime (matches 'Airtime') */}
+            <button
+              type="button"
+              id="service-airtime"
+              onClick={() => onNavigate('airtime-data')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="h-12 w-12 rounded-full bg-[#2B2D31] hover:bg-[#35373C] transition-all flex items-center justify-center text-white shadow-sm group-hover:scale-105">
+                <Smartphone size={18} className="stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] font-bold text-neutral-300 group-hover:text-white transition-colors truncate w-full">
+                Airtime
+              </span>
+            </button>
+
+            {/* Action 4: History (matches 'Pay Bills' / 'More' three-dots but keeps History functionality) */}
+            <button
+              type="button"
+              id="history-btn"
+              onClick={() => onNavigate('transactions')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="h-12 w-12 rounded-full bg-[#2B2D31] hover:bg-[#35373C] transition-all flex items-center justify-center text-white shadow-sm group-hover:scale-105">
+                <History size={18} className="stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] font-bold text-neutral-300 group-hover:text-white transition-colors truncate w-full">
+                History
+              </span>
             </button>
           </div>
 
-          {/* Active Nodes Indicator */}
+          {/* Active Nodes Indicator (compact bottom line) */}
           <div 
-            className="mt-4 pt-3.5 border-t border-white/10 flex justify-between items-center text-[11px] opacity-90 hover:opacity-100 transition-opacity cursor-pointer z-10"
+            className="mt-4 pt-3 border-t border-white/5 flex justify-between items-center text-[11px] opacity-80 hover:opacity-100 transition-opacity cursor-pointer z-10"
             onClick={() => onNavigate('bingshop')}
           >
-            <div className="flex items-center gap-1.5 text-neutral-300">
-              <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
-              <span className="font-bold text-xs">
+            <div className="flex items-center gap-1.5 text-neutral-400">
+              <Flame className="h-4 w-4 text-amber-500 animate-pulse" />
+              <span className="font-semibold text-xs">
                 Active Nodes: <span className="text-white font-mono">{user.activeBings.filter(b => !b.isCompleted).length}</span> Online
               </span>
             </div>
-            <div className="flex items-center gap-0.5 text-amber-400 font-extrabold text-[11px] uppercase tracking-wider">
+            <div className="flex items-center gap-0.5 text-amber-500 font-extrabold text-[11px] uppercase tracking-wider">
               <span>View Nodes</span>
               <ChevronRight size={12} className="stroke-[3]" />
             </div>
@@ -392,25 +487,35 @@ export default function DashboardHome({
 
       </div>
 
-      {/* Promos & Security (Side-by-side grids) */}
+      {/* Promos & Security (Side-by-side grids, redesigned to match premium promotional card style) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
         {/* Floating Promotion Banner */}
         <div 
           onClick={() => onNavigate('referrals')}
-          className="bg-primary-medium text-white p-4 rounded-3xl relative overflow-hidden flex items-center gap-4 cursor-pointer hover:bg-[#1f124a] transition-colors shadow-md border border-purple-900/40"
+          className="bg-gradient-to-br from-[#121315] to-[#1E1F22] text-white p-6 rounded-[32px] relative overflow-hidden flex justify-between items-center cursor-pointer border border-neutral-800 shadow-xl group hover:border-[#E0533C]/40 transition-all"
           id="promo-banner"
         >
-          <div className="p-3 bg-white/10 rounded-2xl">
-            <Gift className="h-6 w-6 text-amber-300 animate-bounce" />
-          </div>
-          <div>
-            <h4 className="font-extrabold text-sm text-amber-300">Invite Friends, Get Paid!</h4>
-            <p className="text-xs text-purple-200 mt-0.5">
-              Earn instant <span className="font-extrabold text-white">₦16,890.00</span> bonus reward for each registered friend!
+          {/* Subtle background glow */}
+          <div className="absolute right-0 top-0 h-28 w-28 bg-[#E0533C]/10 rounded-full blur-2xl pointer-events-none group-hover:bg-[#E0533C]/15 transition-all"></div>
+          
+          <div className="space-y-1.5 z-10 max-w-[70%]">
+            <span className="text-[10px] font-black uppercase text-[#E0533C] tracking-widest">PROMOTION CENTER</span>
+            <h4 className="font-bold text-lg sm:text-xl text-white tracking-tight leading-snug">
+              INVITE FRIENDS TO VOLERAPAY
+            </h4>
+            <p className="text-xs text-neutral-400 font-medium">
+              Earn instant <span className="text-white font-extrabold">₦16,890.00</span> reward per active node referral.
             </p>
+            <div className="mt-3.5 inline-flex items-center gap-2 bg-white text-neutral-950 font-extrabold text-[11px] px-4.5 py-2 rounded-full shadow-md group-hover:bg-[#E0533C] group-hover:text-white transition-all">
+              <span>Start Inviting</span>
+              <ChevronRight size={13} className="stroke-[3]" />
+            </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-purple-300 ml-auto flex-shrink-0" />
+
+          <div className="p-4 bg-neutral-800/50 border border-neutral-700/30 rounded-2xl z-10 scale-105 group-hover:scale-110 transition-transform duration-300">
+            <Gift className="h-7 w-7 text-[#E0533C]" />
+          </div>
         </div>
 
 

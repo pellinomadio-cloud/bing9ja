@@ -207,7 +207,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             </div>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight" id="app-logo">
-            goldrush<span className="text-primary-accent">9ja</span>
+            volera<span className="text-primary-accent">pay</span>
           </h1>
           <p className="text-purple-200 text-xs mt-1 font-medium tracking-widest uppercase">
             Premium Service & Investment Hub

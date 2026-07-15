@@ -49,6 +49,27 @@ export default function App() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<any>(null);
   const [selectedBingService, setSelectedBingService] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isAppInstallable, setIsAppInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsAppInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if currently running standalone (already installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsAppInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>(() => {
     try {
@@ -509,7 +530,7 @@ export default function App() {
     
     setTransactions([initialTx]);
     setActiveTab('home');
-    addToast(`Welcome to GoldRush9ja, ${newUser.username}! ₦6,700.00 signup credit applied.`, 'success');
+    addToast(`Welcome to Volerapay, ${newUser.username}! ₦6,700.00 signup credit applied.`, 'success');
   };
 
   // Toast helper
@@ -570,6 +591,25 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [user ? user.activeBings.length : 0]);
+
+  // Handle PWA native prompt installation
+  const handleTriggerAppInstall = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsAppInstallable(false);
+          setDeferredPrompt(null);
+          addToast("Thank you for installing Volerapay!", "success");
+        }
+      } catch (err) {
+        console.error("Installation prompted error:", err);
+      }
+    } else {
+      addToast("Manual Install Guide opened: Please tap your mobile browser's option menu (3 dots) and tap 'Install app' or 'Add to Home screen'.", "info");
+    }
+  };
 
   // Calculate overall unclaimed earnings
   const unclaimedEarnings = user 
@@ -1020,9 +1060,9 @@ export default function App() {
         <div className="w-full max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-              <div className="w-4.5 h-4.5 bg-primary-medium rounded-sm transform rotate-45"></div>
+              <div className="w-4.5 h-4.5 bg-[#E0533C] rounded-sm transform rotate-45"></div>
             </div>
-            <span className="text-xs sm:text-sm md:text-base font-black tracking-tight">GOLDRUSH9JA</span>
+            <span className="text-xs sm:text-sm md:text-base font-black tracking-tight">VOLERAPAY</span>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
@@ -1058,6 +1098,8 @@ export default function App() {
                 onSimulateWithdrawal={handleSimulateWithdrawal}
                 onClaimAllEarnings={handleClaimAllEarnings}
                 unclaimedEarnings={unclaimedEarnings}
+                isAppInstallable={isAppInstallable}
+                onTriggerAppInstall={handleTriggerAppInstall}
               />
             </motion.div>
           )}
